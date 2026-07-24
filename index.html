@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -668,8 +668,8 @@
                     </h3>
                     <div class="flex flex-col sm:flex-row gap-4 items-end">
                         <div class="flex-1">
-                            <label class="block text-[15px] font-bold text-slate-600 mb-1.5">雲端資料庫網址連結 (GitHub Gist Raw URL)</label>
-                            <input type="text" id="gistUrlInput" placeholder="請貼上 GitHub Gist 原始 Raw 網址" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[15px] font-bold text-slate-600 mb-1.5">雲端資料庫網址連結 (GitHub Raw URL)</label>
+                            <input type="text" id="gistUrlInput" placeholder="請貼上 GitHub 原始 Raw 網址" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
                         <button onclick="saveAndConnectGist()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow transition flex items-center gap-2 shrink-0">
                             <i data-lucide="link" class="w-5 h-5"></i> 連線並讀取雲端歷史庫
@@ -744,7 +744,7 @@
                         <h4 class="font-bold text-[16px] flex items-center gap-2 text-emerald-400">
                             <i data-lucide="save" class="w-5 h-5"></i> 雲端同步完成點：一鍵複製組合歷史總庫
                         </h4>
-                        <p class="text-[15px] text-slate-400 mt-1">本地快取運算完畢後，點擊右方按鈕複製文字，貼回 GitHub Gist 中保存即可做為遠端資料庫。</p>
+                        <p class="text-[15px] text-slate-400 mt-1">本地快取運算完畢後，點擊右方按鈕複製文字，貼回 GitHub 中保存即可做為遠端資料庫。</p>
                     </div>
                     <button onclick="copyCombinedJsonToClipboard()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl text-[15px] shadow-lg transition flex items-center gap-2 shrink-0">
                         <i data-lucide="clipboard-copy" class="w-5 h-5"></i> 複製最新完整歷史資料
@@ -792,25 +792,40 @@
             checkLockoutStatus();
             setDefaultFilterDates();
 
-            const savedGistUrl = localStorage.getItem('logistics_gist_url');
-            if (savedGistUrl) {
-                const urlInput = document.getElementById('gistUrlInput');
-                if (urlInput) urlInput.value = savedGistUrl;
-                connectToGist(savedGistUrl, true);
+            // 1. 強制指定預設 GitHub Raw 網址
+            const defaultUrl = "https://raw.githubusercontent.com/sakuraiba1349/logistics-db/main/data.json";
+            
+            // 2. 優先讀取暫存，若無痕模式讀不到則強制使用 defaultUrl
+            let savedGistUrl = defaultUrl;
+            try {
+                savedGistUrl = localStorage.getItem('logistics_gist_url') || defaultUrl;
+            } catch (e) {
+                savedGistUrl = defaultUrl;
             }
+
+            // 3. 強制填入輸入框，確保畫面不留白
+            const urlInput = document.getElementById('gistUrlInput');
+            if (urlInput) {
+                urlInput.value = savedGistUrl;
+            }
+            
+            // 4. 強制啟動雲端連線
+            connectToGist(savedGistUrl, true);
         });
 
         function checkLockoutStatus() {
-            const lockTime = localStorage.getItem('logistics_lock_ts');
-            if (lockTime) {
-                const diff = Date.now() - parseInt(lockTime);
-                if (diff < 15 * 60 * 1000) {
-                    const remaining = Math.ceil((15 * 60 * 1000 - diff) / 60000);
-                    setLoginLockoutState(remaining);
-                } else {
-                    localStorage.removeItem('logistics_lock_ts');
+            try {
+                const lockTime = localStorage.getItem('logistics_lock_ts');
+                if (lockTime) {
+                    const diff = Date.now() - parseInt(lockTime);
+                    if (diff < 15 * 60 * 1000) {
+                        const remaining = Math.ceil((15 * 60 * 1000 - diff) / 60000);
+                        setLoginLockoutState(remaining);
+                    } else {
+                        localStorage.removeItem('logistics_lock_ts');
+                    }
                 }
-            }
+            } catch (e) {}
         }
 
         function setLoginLockoutState(mins) {
@@ -827,10 +842,12 @@
             const pInput = document.getElementById('passwordInput').value.trim();
             const alertBox = document.getElementById('loginAlert');
 
-            if (localStorage.getItem('logistics_lock_ts')) {
-                checkLockoutStatus();
-                return;
-            }
+            try {
+                if (localStorage.getItem('logistics_lock_ts')) {
+                    checkLockoutStatus();
+                    return;
+                }
+            } catch (e) {}
 
             let foundUser = DYNAMIC_USERS[uInput];
             if (foundUser && foundUser.p === pInput) {
@@ -839,7 +856,7 @@
                 loginFailCount++;
                 alertBox.classList.remove('hidden');
                 if (loginFailCount >= ABS_MAX_FAIL) {
-                    localStorage.setItem('logistics_lock_ts', Date.now().toString());
+                    try { localStorage.setItem('logistics_lock_ts', Date.now().toString()); } catch (e) {}
                     setLoginLockoutState(15);
                 } else {
                     alertBox.innerText = `❌ 帳號或密碼錯誤！(剩餘嘗試機會：${ABS_MAX_FAIL - loginFailCount} 次)`;
@@ -938,19 +955,21 @@
         }
 
         function initIndexedDB() {
-            const request = indexedDB.open("LogisticsDB", 1);
-            request.onupgradeneeded = function(e) {
-                let db = e.target.result;
-                if (!db.objectStoreNames.contains("records")) {
-                    db.createObjectStore("records", { keyPath: "訂單編號" });
-                }
-                if (!db.objectStoreNames.contains("config")) {
-                    db.createObjectStore("config", { keyPath: "key" });
-                }
-            };
-            request.onsuccess = function(e) {
-                dbInstance = e.target.result;
-            };
+            try {
+                const request = indexedDB.open("LogisticsDB", 1);
+                request.onupgradeneeded = function(e) {
+                    let db = e.target.result;
+                    if (!db.objectStoreNames.contains("records")) {
+                        db.createObjectStore("records", { keyPath: "訂單編號" });
+                    }
+                    if (!db.objectStoreNames.contains("config")) {
+                        db.createObjectStore("config", { keyPath: "key" });
+                    }
+                };
+                request.onsuccess = function(e) {
+                    dbInstance = e.target.result;
+                };
+            } catch (e) {}
         }
 
         function loadLocalDataToMemory() {
@@ -958,42 +977,54 @@
                 setTimeout(loadLocalDataToMemory, 200);
                 return;
             }
-            let tx = dbInstance.transaction(["records", "config"], "readonly");
-            let recStore = tx.objectStore("records");
-            let cfgStore = tx.objectStore("config");
+            try {
+                let tx = dbInstance.transaction(["records", "config"], "readonly");
+                let recStore = tx.objectStore("records");
+                let cfgStore = tx.objectStore("config");
 
-            let getAllRecs = recStore.getAll();
-            getAllRecs.onsuccess = function() {
-                GLOBAL_RECORDS = getAllRecs.result || [];
-                
-                let getVol = cfgStore.get("volumes");
-                getVol.onsuccess = function() {
-                    if (getVol.result) GLOBAL_VOLUMES = getVol.result.value || {};
-                    
-                    let getSpec = cfgStore.get("special_stores");
-                    if (getSpec.result) SPECIAL_STORES_LIST = getSpec.result.value || [];
-
-                    let getUsers = cfgStore.get("users");
-                    if (getUsers.result && getUsers.result.value) {
-                        DYNAMIC_USERS = getUsers.result.value;
+                let getAllRecs = recStore.getAll();
+                getAllRecs.onsuccess = function() {
+                    if (getAllRecs.result && getAllRecs.result.length > 0) {
+                        GLOBAL_RECORDS = getAllRecs.result;
                     }
                     
-                    renderDashboard();
+                    let getVol = cfgStore.get("volumes");
+                    getVol.onsuccess = function() {
+                        if (getVol.result && Object.keys(getVol.result.value || {}).length > 0) {
+                            GLOBAL_VOLUMES = getVol.result.value;
+                        }
+                        
+                        let getSpec = cfgStore.get("special_stores");
+                        if (getSpec.result && (getSpec.result.value || []).length > 0) {
+                            SPECIAL_STORES_LIST = getSpec.result.value;
+                        }
+
+                        let getUsers = cfgStore.get("users");
+                        if (getUsers.result && getUsers.result.value) {
+                            DYNAMIC_USERS = getUsers.result.value;
+                        }
+                        
+                        renderDashboard();
+                    };
                 };
-            };
+            } catch (e) {
+                renderDashboard();
+            }
         }
 
         function persistMemoryToDB() {
             if (!dbInstance) return;
-            let tx = dbInstance.transaction(["records", "config"], "readwrite");
-            let recStore = tx.objectStore("records");
-            let cfgStore = tx.objectStore("config");
+            try {
+                let tx = dbInstance.transaction(["records", "config"], "readwrite");
+                let recStore = tx.objectStore("records");
+                let cfgStore = tx.objectStore("config");
 
-            recStore.clear();
-            GLOBAL_RECORDS.forEach(r => recStore.put(r));
-            cfgStore.put({ key: "volumes", value: GLOBAL_VOLUMES });
-            cfgStore.put({ key: "special_stores", value: SPECIAL_STORES_LIST });
-            cfgStore.put({ key: "users", value: DYNAMIC_USERS });
+                recStore.clear();
+                GLOBAL_RECORDS.forEach(r => recStore.put(r));
+                cfgStore.put({ key: "volumes", value: GLOBAL_VOLUMES });
+                cfgStore.put({ key: "special_stores", value: SPECIAL_STORES_LIST });
+                cfgStore.put({ key: "users", value: DYNAMIC_USERS });
+            } catch (e) {}
         }
 
         function renderAccountTable() {
@@ -2110,13 +2141,17 @@
 
         function clearSystemDatabase() {
             if (!confirm("⚠️ 您確定要徹底清空本地快取資料庫嗎？此動作不可逆！")) return;
-            let tx = dbInstance.transaction(["records", "config"], "readwrite");
-            tx.objectStore("records").clear();
-            tx.objectStore("config").clear();
-            tx.oncomplete = function() {
-                alert("🗑️ 本地快取資料庫已成功清空！系統即將重新載入。");
+            try {
+                let tx = dbInstance.transaction(["records", "config"], "readwrite");
+                tx.objectStore("records").clear();
+                tx.objectStore("config").clear();
+                tx.oncomplete = function() {
+                    alert("🗑️ 本地快取資料庫已成功清空！系統即將重新載入。");
+                    location.reload();
+                };
+            } catch (e) {
                 location.reload();
-            };
+            }
         }
 
         function copyCombinedJsonToClipboard() {
@@ -2128,7 +2163,7 @@
 
         async function saveAndConnectGist() {
             const url = document.getElementById('gistUrlInput').value.trim();
-            if (!url) { alert("請貼上 GitHub Gist 的 Raw 網址"); return; }
+            if (!url) { alert("請貼上 GitHub Gist 或 Raw 網址"); return; }
             await connectToGist(url, false);
         }
 
@@ -2143,7 +2178,7 @@
                     SPECIAL_STORES_LIST = cloudData.special_stores || [];
                     if (cloudData.users) DYNAMIC_USERS = cloudData.users;
                     
-                    localStorage.setItem('logistics_gist_url', url);
+                    try { localStorage.setItem('logistics_gist_url', url); } catch (e) {}
                     persistMemoryToDB();
 
                     updateSyncStatusUI(true);
@@ -2151,7 +2186,7 @@
                     if (!isAuto) alert("🎉 遠端雲端歷史總庫讀取同步成功！");
                     renderDashboard();
                 } else {
-                    throw new Error("格式錯誤：此 Gist 內容不符合戰情室 JSON 結構");
+                    throw new Error("格式錯誤：此 JSON 內容不符合戰情室資料結構");
                 }
             } catch (err) {
                 updateSyncStatusUI(false);
