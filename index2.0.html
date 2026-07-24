@@ -1,0 +1,2225 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【AI落地實戰】服務EC履約時效監控戰情室</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 核心外掛：引入 Chart.js Datalabels 數字標籤外掛 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <!-- SheetJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-main: #F4F6F8;
+            --text-main: #4A5568;
+            --color-lihuo: #5A6B54;
+            --color-peisong: #4A607A;
+            --color-yanshou: #C48464;
+            --color-reasons: #D9A05B;
+            --color-trend: #3B82F6; /* 亮藍色 */
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 15px; /* 全域主內容基礎字體 15px */
+        }
+        .morandi-lihuo { color: var(--color-lihuo); }
+        .morandi-peisong { color: var(--color-peisong); }
+        .morandi-yanshou { color: var(--color-yanshou); }
+        
+        .bg-morandi-lihuo-op { background-color: rgba(90, 107, 84, 0.08); }
+        .bg-morandi-peisong-op { background-color: rgba(74, 96, 122, 0.08); }
+        .bg-morandi-yanshou-op { background-color: rgba(196, 132, 100, 0.08); }
+
+        @media print {
+            body { background-color: white !important; overflow: visible !important; }
+            #appContainer { display: block !important; height: auto !important; }
+            aside, header, .print\:hidden { display: none !important; }
+            main { overflow: visible !important; }
+            .print\:break-before-page { page-break-before: always !important; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-[15px]">
+
+    <!-- ========================================== -->
+    <!-- 1. 登入牆畫面                             -->
+    <!-- ========================================== -->
+    <div id="loginScreen" class="fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center z-50 p-4 print:hidden">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8 border border-slate-100 flex flex-col gap-6">
+            <div class="text-center">
+                <div class="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-full mb-3">
+                    <i data-lucide="shield-check" class="w-10 h-10"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800">【AI落地實戰】成果計畫</h2>
+                <p class="text-[15px] text-slate-500 mt-2">服務EC履約時效監控系統 - 安全身分認證</p>
+            </div>
+            
+            <div id="loginAlert" class="hidden p-3.5 bg-red-50 border border-red-200 text-red-600 text-[15px] rounded-lg font-semibold"></div>
+
+            <!-- 帳密提示區塊 -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-[15px] text-slate-600 space-y-2">
+                <div class="font-bold text-slate-700 flex items-center gap-1.5">
+                    <i data-lucide="key-round" class="w-4 h-4 text-emerald-600"></i> 預設測試帳號資訊：
+                </div>
+                <div class="flex justify-between items-center bg-white p-2.5 rounded border border-slate-100 font-mono text-[15px]">
+                    <span class="font-semibold text-slate-700">最高管理者:</span>
+                    <span>帳號 <b class="text-slate-800">admin</b> / 密碼 <b class="text-slate-800">admin2026</b></span>
+                </div>
+                <div class="flex justify-between items-center bg-white p-2.5 rounded border border-slate-100 font-mono text-[15px]">
+                    <span class="font-semibold text-slate-700">一般檢視者:</span>
+                    <span>帳號 <b class="text-slate-800">viewer</b> / 密碼 <b class="text-slate-800">password123</b></span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-[15px] font-semibold text-slate-700 mb-1.5">使用身分帳號</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                        </span>
+                        <input type="text" id="usernameInput" placeholder="請輸入帳號" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-[15px]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[15px] font-semibold text-slate-700 mb-1.5">認證密碼</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <i data-lucide="lock" class="w-5 h-5"></i>
+                        </span>
+                        <input type="password" id="passwordInput" placeholder="請輸入密碼" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-[15px]">
+                    </div>
+                </div>
+            </div>
+
+            <button id="loginBtn" onclick="handleLogin()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3.5 rounded-lg shadow-md transition duration-200 text-[16px] flex items-center justify-center gap-2">
+                <i data-lucide="log-in" class="w-5 h-5"></i> 驗證身分並登入
+            </button>
+
+            <p class="text-center text-[15px] text-amber-600 font-medium flex items-center justify-center gap-1.5">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i> 注意事項：此為測試版
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. 主系統畫面                             -->
+    <!-- ========================================== -->
+    <div id="appContainer" class="hidden h-screen flex flex-col md:flex-row w-full overflow-hidden">
+        
+        <!-- 側邊欄 (系統標題 15px，選單與使用者卡片 13px) -->
+        <aside class="w-full md:w-64 bg-slate-800 text-slate-100 flex flex-col shrink-0 border-b md:border-b-0 md:border-r border-slate-700 print:hidden text-[13px]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="p-1.5 bg-emerald-600 rounded-lg"><i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i></div>
+                    <span class="font-bold tracking-wider text-[15px]">服務EC履約時效</span>
+                </div>
+                <button onclick="toggleMobileMenu()" class="md:hidden p-1 text-slate-300 hover:text-white">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- 使用者身分資訊卡 -->
+            <div class="p-3 bg-slate-900 mx-3 mt-3 rounded-xl border border-slate-700 flex items-center justify-between text-[13px]">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <div>
+                        <p class="font-semibold text-slate-200" id="currentUserName">未登入</p>
+                        <p class="text-slate-400" id="currentUserRoleLbl">權限：無</p>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="text-slate-400 hover:text-red-400 p-1 rounded transition" title="登出系統">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- 分頁導覽選單 -->
+            <nav id="sidebarNav" class="flex-1 p-3 flex flex-col gap-1.5 overflow-y-auto">
+                <button id="navTab0" onclick="switchTab(0)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg bg-emerald-600 text-white text-left transition">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> 服務EC履約時效
+                </button>
+                <button id="navTab1" onclick="switchTab(1)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition">
+                    <i data-lucide="search" class="w-4 h-4"></i> 明細查詢
+                </button>
+                <button id="navTab2" onclick="switchTab(2)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition">
+                    <i data-lucide="calendar-days" class="w-4 h-4"></i> 寄件數行事曆
+                </button>
+
+                <!-- 🔒 管理者限定分頁 -->
+                <button id="navTab4" onclick="switchTab(4)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition">
+                    <i data-lucide="map-pin" class="w-4 h-4"></i> 特殊店名單查詢
+                </button>
+                <button id="navTab5" onclick="switchTab(5)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition border-t border-slate-700 mt-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> 週報簡報產出
+                </button>
+                <button id="navTab3" onclick="switchTab(3)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition border border-dashed border-slate-600 mt-1">
+                    <i data-lucide="database" class="w-4 h-4"></i> 後台資料管理
+                </button>
+            </nav>
+            <div class="p-3 border-t border-slate-700 text-center text-slate-400">
+                AI落地實戰專案 成果繳交版
+            </div>
+        </aside>
+
+        <!-- 主內容顯示區 -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            
+            <header class="bg-white border-b border-slate-200 px-6 py-4 shrink-0 flex flex-wrap justify-between items-center gap-4 shadow-sm print:hidden">
+                <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="activity" class="w-6 h-6 text-slate-500"></i>
+                    <span id="pageTitle">服務EC履約時效</span>
+                </h1>
+                <div id="syncStatusIndicator" class="text-[15px] bg-amber-50 border border-amber-200 text-amber-700 px-4 py-1.5 rounded-full font-medium flex items-center gap-2">
+                    <i data-lucide="cloud-off" class="w-4 h-4 animate-bounce"></i> 雲端中轉未連線，目前使用本地快取
+                </div>
+            </header>
+
+            <!-- ========================================== -->
+            <!-- 第一頁：戰情分頁                           -->
+            <!-- ========================================== -->
+            <section id="tabContent0" class="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-slate-500"></i>
+                        <span class="text-[16px] font-semibold text-slate-700">選擇日期區間：</span>
+                    </div>
+                    <input type="date" id="filterStartDate" onchange="renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                    <span class="text-slate-400 text-[15px]">至</span>
+                    <input type="date" id="filterEndDate" onchange="renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                    <button onclick="resetDashboardDates()" class="ml-auto text-[15px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold transition">重設範圍</button>
+                </div>
+
+                <!-- 4 大 KPI 卡片 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-[15px] font-semibold text-slate-500">寄件數</p>
+                            <h3 id="kpiTotalPackages" class="text-3xl font-extrabold text-slate-800 mt-1 whitespace-nowrap">0</h3>
+                        </div>
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+                            <i data-lucide="package" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-[15px] font-semibold text-slate-500">總延遲件數</p>
+                            <h3 id="kpiTotalDelays" class="text-3xl font-extrabold text-slate-800 mt-1 whitespace-nowrap">0</h3>
+                        </div>
+                        <div class="p-3 bg-red-50 text-red-600 rounded-xl shrink-0">
+                            <i data-lucide="truck" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-[15px] font-semibold text-slate-500">物流責任件數</p>
+                            <h3 id="kpiCoreDelays" class="text-3xl font-extrabold text-slate-800 mt-1 whitespace-nowrap">0</h3>
+                        </div>
+                        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0">
+                            <i data-lucide="warehouse" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-[15px] font-semibold text-slate-500">時效達標率</p>
+                            <h3 id="kpiSlaRate" class="text-3xl font-extrabold text-slate-800 mt-1 whitespace-nowrap">0.00%</h3>
+                        </div>
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+                            <i data-lucide="percent" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-5 flex flex-col min-h-[380px]">
+                        <h4 class="text-[16px] font-bold text-slate-700 border-b pb-2.5 mb-4 flex items-center gap-2"><i data-lucide="pie-chart" class="w-5 h-5"></i> 責任單位異常佔比分析</h4>
+                        <div class="flex-1 relative flex items-center justify-center"><canvas id="chartUnit"></canvas></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-7 flex flex-col min-h-[400px]">
+                        <h4 class="text-[16px] font-bold text-slate-700 border-b pb-2.5 mb-4 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5"></i> 各倉延遲件數</h4>
+                        <div class="flex-1 relative"><canvas id="chartWarehouseStack"></canvas></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-12 flex flex-col min-h-[400px]">
+                        <h4 class="text-[16px] font-bold text-slate-700 border-b pb-2.5 mb-4 flex items-center gap-2"><i data-lucide="list-ordered" class="w-5 h-5"></i> 物流延遲原因排行分佈</h4>
+                        <div class="flex-1 relative"><canvas id="chartReasons"></canvas></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-12 flex flex-col min-h-[380px]">
+                        <h4 class="text-[16px] font-bold text-slate-700 border-b pb-2.5 mb-4 flex items-center gap-2"><i data-lucide="trending-up" class="w-5 h-5"></i> 物流責任件數趨勢走勢圖</h4>
+                        <div class="flex-1 relative"><canvas id="chartTrend"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 第二頁：明細查詢分頁 (文字 14px)            -->
+            <!-- ========================================== -->
+            <section id="tabContent1" class="hidden flex-1 overflow-y-auto p-6 flex flex-col gap-4 text-[14px]">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+                    <div class="sm:col-span-2 flex items-center gap-2">
+                        <div class="flex-1">
+                            <label class="block font-bold text-slate-600 mb-1.5">查詢開始日期</label>
+                            <input type="date" id="searchStartDate" onchange="doQueryFiltering()" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <span class="text-slate-400 mt-6">至</span>
+                        <div class="flex-1">
+                            <label class="block font-bold text-slate-600 mb-1.5">查詢結束日期</label>
+                            <input type="date" id="searchEndDate" onchange="doQueryFiltering()" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1.5">關鍵字搜尋 (訂單/店號/店名)</label>
+                        <input type="text" id="searchKeyword" oninput="doQueryFiltering()" placeholder="請輸入關鍵字..." class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1.5">篩選歸屬倉別</label>
+                        <select id="searchWhFilter" onchange="doQueryFiltering()" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">-- 全部倉別 --</option>
+                            <option value="大溪倉">大溪倉</option>
+                            <option value="岡山倉">岡山倉</option>
+                            <option value="大肚倉">大肚倉</option>
+                            <option value="店舖">店舖</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1.5">篩選責任單位</label>
+                        <select id="searchUnitFilter" onchange="doQueryFiltering()" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">-- 全部單位 --</option>
+                            <option value="理貨">理貨</option>
+                            <option value="運務">運務</option>
+                            <option value="驗收">驗收</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex shrink-0 justify-end">
+                    <button onclick="exportQueryToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow flex items-center gap-2 transition">
+                        <i data-lucide="download" class="w-4 h-4"></i> 匯出篩選明細 Excel
+                    </button>
+                </div>
+
+                <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="flex-1 overflow-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('日期')">日期 ⇅</th>
+                                    <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('星期')">星期 ⇅</th>
+                                    <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('訂單編號')">訂單編號 ⇅</th>
+                                    <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('[延遲主因]')">[延遲主因] ⇅</th>
+                                    <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('[責任歸屬倉別]')">[責任歸屬倉別] ⇅</th>
+                                    <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('[責任歸屬單位]')">[責任歸屬單位] ⇅</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queryTableBody" class="divide-y divide-slate-100 text-slate-600">
+                                <tr>
+                                    <td colspan="6" class="p-8 text-center text-slate-400 font-medium">目前查無任何物流歷史紀錄，請至後台管理上傳原始檔案。</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="bg-slate-50 font-bold text-slate-800 sticky bottom-0 border-t border-slate-200">
+                                <tr>
+                                    <td class="p-3.5" id="tfootLabel">總計筆數</td>
+                                    <td class="p-3.5 text-emerald-600" id="tfootTotalRows" colspan="5">0 筆</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <!-- 頁碼跳轉區 -->
+                    <div class="bg-slate-50 border-t border-slate-200 p-3.5 flex flex-wrap justify-between items-center gap-3 shrink-0">
+                        <span class="text-slate-500 font-medium" id="tablePaginationInfo">顯示第 0 到 0 筆，共 0 筆</span>
+                        
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1.5 text-slate-600 font-medium">
+                                <span>跳至第</span>
+                                <input type="number" id="jumpPageInput" min="1" onkeydown="if(event.key==='Enter') jumpToTargetPage()" class="w-16 border border-slate-300 rounded px-2 py-1 text-center bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold">
+                                <span id="totalPagesLabel">/ 共 1 頁</span>
+                                <button onclick="jumpToTargetPage()" class="ml-1 px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded text-slate-700 font-semibold transition">前往</button>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button id="btnPrevPage" onclick="changeQueryPage(-1)" class="px-4 py-1 bg-white border rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 font-semibold transition">上一頁</button>
+                                <button id="btnNextPage" onclick="changeQueryPage(1)" class="px-4 py-1 bg-white border rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 font-semibold transition">下一頁</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 第三頁：寄件數行事曆分頁                    -->
+            <!-- ========================================== -->
+            <section id="tabContent2" class="hidden flex-1 overflow-y-auto p-6 flex flex-col gap-6 text-[14px]">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-5 flex-1">
+                    <div class="flex justify-between items-center border-b pb-4">
+                        <div class="flex flex-col gap-1">
+                            <h3 class="text-[17px] font-bold text-slate-800 flex items-center gap-2">
+                                <i data-lucide="calendar-days" class="w-5 h-5 text-emerald-600"></i>
+                                📊 每日寄件數監控行事曆
+                            </h3>
+                            <p class="text-slate-500">點擊下方任意日期格子，即可直接手動快速修改、補登當日寄件出貨總件數。</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="changeCalendarMonth(-1)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition font-bold flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> 上個月</button>
+                            <span id="calendarMonthLabel" class="text-[17px] font-extrabold text-slate-800 px-4 min-w-[140px] text-center">2026 年 06 月</span>
+                            <button onclick="changeCalendarMonth(1)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition font-bold flex items-center gap-1">下個月 <i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-3 text-center font-bold text-[15px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div class="text-red-500 py-1">星期日</div>
+                        <div class="py-1">星期一</div>
+                        <div class="py-1">星期二</div>
+                        <div class="py-1">星期三</div>
+                        <div class="py-1">星期四</div>
+                        <div class="py-1">星期五</div>
+                        <div class="text-emerald-600 py-1">星期六</div>
+                    </div>
+                    <div id="calendarGridBody" class="grid grid-cols-7 gap-3 flex-1 align-stretch">
+                        <!-- JS 動態渲染行事曆主體 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 第五頁：特殊店名單查詢專區                  -->
+            <!-- ========================================== -->
+            <section id="tabContent4" class="hidden flex-1 overflow-y-auto p-6 flex flex-col gap-5 text-[14px]">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h3 class="text-[15px] font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600"></i> 特殊店與離島門市名冊維護專區
+                        </h3>
+                        <button onclick="exportSpecialStoresToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded-lg shadow flex items-center gap-2 transition">
+                            <i data-lucide="download" class="w-4 h-4"></i> 匯出特殊店名單 Excel
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1 border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50 hover:bg-slate-100 transition relative">
+                            <input type="file" id="fileUploadC" accept=".xlsx, .xls" onchange="handleExcelUpload(event, 'C')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <div class="text-slate-500 pointer-events-none flex flex-col items-center gap-1.5">
+                                <i data-lucide="upload-cloud" class="w-7 h-7 text-blue-600"></i>
+                                <span class="text-[15px] font-bold text-slate-700">點擊或拖曳上傳離島與特殊店維護名冊 (.xlsx)</span>
+                                <span class="text-slate-500">完整解析「店號、店名、路線路順、備註」，並即時連動校正歷史庫數據</span>
+                            </div>
+                        </div>
+                        <button onclick="downloadBlankTemplate('C')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-4 rounded-xl font-bold flex flex-col items-center justify-center gap-1.5 shrink-0 h-full min-w-[120px]">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 下載範本
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <i data-lucide="store" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-500">當前已維護特殊門市總數</p>
+                            <h3 id="specialStoreCount" class="text-xl font-bold text-slate-800">0 家</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full sm:w-80">
+                        <input type="text" id="searchSpecialStoreInput" oninput="renderSpecialStoreTable()" placeholder="搜尋店號、店名或備註..." class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[350px]">
+                    <div class="flex-1 overflow-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-3.5 border-b w-14 text-center">#</th>
+                                    <th class="p-3.5 border-b w-32">門市店號</th>
+                                    <th class="p-3.5 border-b w-48">門市名稱</th>
+                                    <th class="p-3.5 border-b w-32">路線路順</th>
+                                    <th class="p-3.5 border-b">備註說明</th>
+                                    <th class="p-3.5 border-b min-w-[180px]">自動判定狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody id="specialStoreTableBody" class="divide-y divide-slate-100 text-slate-600">
+                                <tr>
+                                    <td colspan="6" class="p-8 text-center text-slate-400 font-medium">目前尚未上傳或載入任何特殊店名冊。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 第六頁：週報簡報產出專區                   -->
+            <!-- ========================================== -->
+            <section id="tabContent5" class="hidden flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-slate-100 text-[15px]">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 print:hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <i data-lucide="presentation" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-[16px] font-bold text-slate-800">每週履約時效簡報自動生成器</h3>
+                            <p class="text-[15px] text-slate-500">選擇本週區間，系統自動近三週計算並對齊簡報標準格式</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[15px] font-semibold text-slate-600">選擇本週區間：</span>
+                            <input type="date" id="reportWeekStart" onchange="renderWeeklyReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
+                            <span class="text-[15px] text-slate-400">至</span>
+                            <input type="date" id="reportWeekEnd" onchange="renderWeeklyReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
+                        </div>
+                        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
+                            <i data-lucide="printer" class="w-5 h-5"></i> 列印 / 匯出簡報 PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 簡報第一頁 -->
+                <div class="bg-white p-8 rounded-xl shadow border border-slate-200 max-w-5xl mx-auto w-full font-sans text-slate-800 print:shadow-none print:p-0 print:border-none">
+                    <div class="flex justify-between items-end border-b-2 border-slate-800 pb-3 mb-5">
+                        <h2 class="text-2xl font-bold tracking-tight">二、重點說明-履約時效-服務EC(C2C+B2C)</h2>
+                        <span class="text-[15px] font-semibold text-slate-600" id="rptDateRangeLbl1">統計區間：出貨日 --/--~--/--</span>
+                    </div>
+
+                    <p class="text-[15px] font-bold mb-3 flex items-center gap-1">■ 服務EC履約時效(C2C+B2C)【6月KPI目標100%】</p>
+
+                    <table class="w-full text-center border-collapse text-[15px] mb-5 border border-slate-300">
+                        <thead class="bg-slate-700 text-white font-semibold">
+                            <tr>
+                                <th class="p-2 border border-slate-300">達成狀況</th>
+                                <th class="p-2 border border-slate-300">114/12</th>
+                                <th class="p-2 border border-slate-300">115/1</th>
+                                <th class="p-2 border border-slate-300">115/2</th>
+                                <th class="p-2 border border-slate-300">115/3</th>
+                                <th class="p-2 border border-slate-300">115/4</th>
+                                <th class="p-2 border border-slate-300">115/5</th>
+                                <th class="p-2 border border-slate-300">115/6</th>
+                                <th class="p-2 border border-slate-300 bg-blue-800">115/7</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 bg-slate-50">
+                            <tr>
+                                <td class="p-2 border border-slate-300 font-semibold bg-slate-100">設定KPI</td>
+                                <td class="p-2 border">98.5%</td><td class="p-2 border">98.7%</td><td class="p-2 border">98.9%</td>
+                                <td class="p-2 border">99.0%</td><td class="p-2 border">99.5%</td><td class="p-2 border">100%</td>
+                                <td class="p-2 border">100%</td><td class="p-2 border font-bold">100%</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border border-slate-300 font-semibold bg-slate-100">實績</td>
+                                <td class="p-2 border">99.0%</td><td class="p-2 border">98.9%</td><td class="p-2 border">99.1%</td>
+                                <td class="p-2 border">99.8%</td><td class="p-2 border">99.8%</td><td class="p-2 border">99.8%</td>
+                                <td class="p-2 border">99.8%</td><td class="p-2 border font-bold text-blue-600" id="rptCurrentActualSla">0.0%</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border border-slate-300 font-semibold bg-slate-100">是否達成</td>
+                                <td class="p-2 border">○</td><td class="p-2 border">○</td><td class="p-2 border">○</td>
+                                <td class="p-2 border">○</td><td class="p-2 border">○</td><td class="p-2 border">✕</td>
+                                <td class="p-2 border">✕</td><td class="p-2 border font-bold" id="rptIsAchieved">✕</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="w-full text-center border-collapse text-[15px] mb-5 border border-slate-300">
+                        <thead class="bg-blue-800 text-white font-semibold">
+                            <tr>
+                                <th class="p-2.5 border border-slate-300 w-1/3" colspan="2">寄件日日期</th>
+                                <th class="p-2.5 border border-slate-300" id="rptWeekHeader2">前二週合計</th>
+                                <th class="p-2.5 border border-slate-300" id="rptWeekHeader1">前一週合計</th>
+                                <th class="p-2.5 border border-slate-300 bg-blue-900" id="rptWeekHeader0">本週合計</th>
+                                <th class="p-2.5 border border-slate-300">前週比</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rptMainTableBody" class="divide-y divide-slate-200 text-slate-700">
+                            <!-- 動態帶入 -->
+                        </tbody>
+                    </table>
+
+                    <div class="text-[15px] space-y-1.5 mt-5 border-t pt-4">
+                        <p id="rptSummaryLine1">1. 本週歸屬於物流問題延遲共 <b class="text-red-600" id="rptLogisticsDelayCnt">0</b> 件，前週比為 <b id="rptLogisticsDelayRatio">0%</b>。</p>
+                        <p id="rptSummaryLine2">2. 異常較高件數為延遲配送共 <b class="text-red-600" id="rptTopDelayCnt">0</b> 件、前週比 <b id="rptTopDelayRatio">0%</b>。</p>
+                    </div>
+                </div>
+
+                <!-- 簡報第二頁 -->
+                <div class="bg-white p-8 rounded-xl shadow border border-slate-200 max-w-5xl mx-auto w-full font-sans text-slate-800 print:shadow-none print:p-0 print:border-none print:break-before-page">
+                    <div class="flex justify-between items-end border-b-2 border-slate-800 pb-3 mb-5">
+                        <h2 class="text-2xl font-bold tracking-tight">二、重點說明-履約時效-服務EC(C2C+B2C)</h2>
+                        <span class="text-[15px] font-semibold text-slate-600" id="rptDateRangeLbl2">統計區間：出貨日 --/--~--/--</span>
+                    </div>
+
+                    <p class="text-[15px] font-bold mb-3">■ 各倉物流責任狀況分析</p>
+                    
+                    <table class="w-full text-center border-collapse text-[15px] mb-6 border border-slate-300">
+                        <thead class="bg-blue-100 text-slate-800 font-bold">
+                            <tr>
+                                <th class="p-2.5 border border-slate-300 w-1/4">延遲原因</th>
+                                <th class="p-2.5 border border-slate-300">大溪倉</th>
+                                <th class="p-2.5 border border-slate-300">大肚倉</th>
+                                <th class="p-2.5 border border-slate-300">岡山倉</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rptWhStackTableBody" class="divide-y divide-slate-200">
+                            <!-- 動態帶入 -->
+                        </tbody>
+                    </table>
+
+                    <p class="text-[15px] font-bold mb-3">■ 本週高異常原因</p>
+                    
+                    <table class="w-full text-center border-collapse text-[15px] mb-6 border border-slate-300">
+                        <thead class="bg-blue-100 text-slate-800 font-bold">
+                            <tr>
+                                <th class="p-2.5 border border-slate-300">倉別</th>
+                                <th class="p-2.5 border border-slate-300">延遲原因</th>
+                                <th class="p-2.5 border border-slate-300 w-2/5">異常狀況說明</th>
+                                <th class="p-2.5 border border-slate-300">重點異常路線</th>
+                                <th class="p-2.5 border border-slate-300">重點異常店舖</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rptHighAnomalyTableBody">
+                            <tr>
+                                <td class="p-2.5 border">大溪倉</td>
+                                <td class="p-2.5 border font-semibold text-red-600">延遲配送</td>
+                                <td class="p-2.5 border text-left">當日大量延遲 (進貨日區域監控)</td>
+                                <td class="p-2.5 border">UC</td>
+                                <td class="p-2.5 border">寧夏店</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="text-[15px] space-y-1.5 border-t pt-4">
+                        <p class="font-bold">・ 重點說明：</p>
+                        <p>・ 本週主要高異常原因為<b class="text-red-600" id="rptPage2TopReason">延遲配送</b>。</p>
+                        <p>・ 延遲配送本週共 <b id="rptPage2DelayCnt">0</b> 件，其中大溪倉 <b id="rptPage2DaxiCnt">0</b> 件，後續將針對高異常路線啟用訊息提醒並透過 PDA 強化過刷。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- 第四頁：後台維護                             -->
+            <!-- ========================================== -->
+            <section id="tabContent3" class="hidden flex-1 overflow-y-auto p-6 flex flex-col gap-6 text-[15px]">
+                <!-- 帳號權限管理專區 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4">
+                    <h3 class="text-[16px] font-bold text-slate-800 flex items-center gap-2 border-b pb-2.5">
+                        <i data-lucide="users" class="w-5 h-5 text-emerald-600"></i> 系統帳號權限管理專區
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block text-[15px] font-bold text-slate-600 mb-1.5">新增 / 修改帳號</label>
+                            <input type="text" id="manageAccUsername" placeholder="輸入帳號" class="w-full border border-slate-200 bg-white rounded-lg px-3.5 py-2 text-[15px]">
+                        </div>
+                        <div>
+                            <label class="block text-[15px] font-bold text-slate-600 mb-1.5">設定認證密碼</label>
+                            <input type="password" id="manageAccPassword" placeholder="輸入密碼" class="w-full border border-slate-200 bg-white rounded-lg px-3.5 py-2 text-[15px]">
+                        </div>
+                        <div>
+                            <label class="block text-[15px] font-bold text-slate-600 mb-1.5">指派系統權限</label>
+                            <select id="manageAccRole" class="w-full border border-slate-200 bg-white rounded-lg px-3.5 py-2 text-[15px]">
+                                <option value="viewer">一般檢視者 (僅看戰情/查詢/行事曆)</option>
+                                <option value="admin">最高管理者 (全權限包含特殊店/簡報/後台)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="saveOrUpdateUserAccount()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg text-[15px] shadow transition flex items-center justify-center gap-1.5">
+                                <i data-lucide="user-plus" class="w-5 h-5"></i> 儲存 / 更新帳號
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-xl overflow-hidden text-[15px]">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-100 font-bold text-slate-700">
+                                <tr>
+                                    <th class="p-3 border-b">帳號名稱</th>
+                                    <th class="p-3 border-b">密碼狀態</th>
+                                    <th class="p-3 border-b">權限階層</th>
+                                    <th class="p-3 border-b text-center">操作控制</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userAccountTableBody" class="divide-y divide-slate-100">
+                                <!-- 動態載入使用者帳號 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4">
+                    <h3 class="text-[16px] font-bold text-slate-800 flex items-center gap-2 border-b pb-2.5">
+                        <i data-lucide="cloud" class="w-5 h-5 text-emerald-600"></i> 雲端免登入中轉維護設定
+                    </h3>
+                    <div class="flex flex-col sm:flex-row gap-4 items-end">
+                        <div class="flex-1">
+                            <label class="block text-[15px] font-bold text-slate-600 mb-1.5">雲端資料庫網址連結 (GitHub Gist Raw URL)</label>
+                            <input type="text" id="gistUrlInput" placeholder="請貼上 GitHub Gist 原始 Raw 網址" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <button onclick="saveAndConnectGist()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow transition flex items-center gap-2 shrink-0">
+                            <i data-lucide="link" class="w-5 h-5"></i> 連線並讀取雲端歷史庫
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4">
+                        <h3 class="text-[16px] font-bold text-slate-800 flex items-center gap-2 border-b pb-2.5">
+                            <i data-lucide="upload-cloud" class="w-5 h-5 text-emerald-600"></i> 物流 Excel 數據灌入與更新機制
+                        </h3>
+                        
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1 border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50 hover:bg-slate-100 transition relative">
+                                <input type="file" id="fileUploadA" accept=".xlsx, .xls" onchange="handleExcelUpload(event, 'A')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <div class="text-slate-500 pointer-events-none flex flex-col items-center gap-1.5">
+                                    <i data-lucide="file-spreadsheet" class="w-7 h-7 text-emerald-600"></i>
+                                    <span class="text-[16px] font-bold text-slate-700">第一區：上傳原始物流大表 (跑 12 道自動判定)</span>
+                                    <span class="text-[15px] text-slate-500">支援拆分欄位合併 / 重複訂單編號將自動覆蓋更新</span>
+                                </div>
+                            </div>
+                            <button onclick="downloadBlankTemplate('A')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-4 rounded-xl text-[15px] font-bold flex flex-col items-center justify-center gap-1.5 shrink-0 h-full min-w-[120px]">
+                                <i data-lucide="download" class="w-5 h-5"></i> 下載範本
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1 border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50 hover:bg-slate-100 transition relative">
+                                <input type="file" id="fileUploadB" accept=".xlsx, .xls" onchange="handleExcelUpload(event, 'B')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <div class="text-slate-500 pointer-events-none flex flex-col items-center gap-1.5">
+                                    <i data-lucide="file-edit" class="w-7 h-7 text-amber-600"></i>
+                                    <span class="text-[16px] font-bold text-slate-700">第二區：上傳人工修正原因名冊 (有填寫則強制覆蓋主因)</span>
+                                    <span class="text-[15px] text-slate-500">對齊補充「延遲原因」等三欄位進行強制覆寫，保留原始判定軌跡</span>
+                                </div>
+                            </div>
+                            <button onclick="downloadBlankTemplate('B')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-4 rounded-xl text-[15px] font-bold flex flex-col items-center justify-center gap-1.5 shrink-0 h-full min-w-[120px]">
+                                <i data-lucide="download" class="w-5 h-5"></i> 下載範本
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1 border-2 border-dashed border-blue-200 rounded-xl p-5 text-center bg-blue-50/40 hover:bg-blue-50 transition relative">
+                                <input type="file" id="fileUploadD" accept=".xlsx, .xls" onchange="handleExcelUpload(event, 'D')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <div class="text-slate-500 pointer-events-none flex flex-col items-center gap-1.5">
+                                    <i data-lucide="file-digit" class="w-7 h-7 text-blue-600"></i>
+                                    <span class="text-[16px] font-bold text-blue-800">第四區：上傳全倉每日寄件總件數大表 (雙列橫向矩陣解析)</span>
+                                    <span class="text-[15px] text-blue-600">對齊第一列「日期」、第二列「寄件數」/ 自動清洗並覆蓋歷史庫</span>
+                                </div>
+                            </div>
+                            <button onclick="downloadBlankTemplate('D')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-4 rounded-xl text-[15px] font-bold flex flex-col items-center justify-center gap-1.5 shrink-0 h-full min-w-[120px]">
+                                <i data-lucide="download" class="w-5 h-5"></i> 下載範本
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200 flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+                    <div>
+                        <h4 class="font-bold text-[16px] text-red-800 flex items-center gap-2">
+                            <i data-lucide="trash-2"></i> 系統維護動作：清空本地快取資料庫
+                        </h4>
+                        <p class="text-[15px] text-red-600 mt-1">此動作將徹底清除瀏覽器本地快取（IndexedDB）中的所有物流明細、歷史寄件數以及特殊店資料。</p>
+                    </div>
+                    <button onclick="clearSystemDatabase()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-6 rounded-xl text-[15px] shadow transition flex items-center gap-2 shrink-0">
+                        <i data-lucide="alert-triangle"></i> 徹底清空本地快取資料庫
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 text-slate-100 p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h4 class="font-bold text-[16px] flex items-center gap-2 text-emerald-400">
+                            <i data-lucide="save" class="w-5 h-5"></i> 雲端同步完成點：一鍵複製組合歷史總庫
+                        </h4>
+                        <p class="text-[15px] text-slate-400 mt-1">本地快取運算完畢後，點擊右方按鈕複製文字，貼回 GitHub Gist 中保存即可做為遠端資料庫。</p>
+                    </div>
+                    <button onclick="copyCombinedJsonToClipboard()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl text-[15px] shadow-lg transition flex items-center gap-2 shrink-0">
+                        <i data-lucide="clipboard-copy" class="w-5 h-5"></i> 複製最新完整歷史資料
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3. 核心運算 JavaScript 實作區               -->
+    <!-- ========================================== -->
+    <script>
+        let DYNAMIC_USERS = {
+            admin: { u: "admin", p: "admin2026", role: "admin", roleName: "最高管理者" },
+            viewer: { u: "viewer", p: "password123", role: "viewer", roleName: "一般檢視者" }
+        };
+
+        let loginFailCount = 0;
+        const ABS_MAX_FAIL = 3;
+        let currentUserRole = null;
+
+        let GLOBAL_RECORDS = [];
+        let GLOBAL_VOLUMES = {}; 
+        let SPECIAL_STORES_LIST = [];
+
+        let currentTabIdx = 0;
+        let queryFilteredData = [];
+        let queryCurrentPage = 1;
+        const queryPageSize = 25;
+        let currentSortField = "日期";
+        let currentSortAsc = false;
+
+        let calCurrentYear = 2026;
+        let calCurrentMonth = 5; 
+
+        let chartInstances = { unit: null, whStack: null, reasons: null, trend: null }; 
+        let dbInstance = null;
+
+        Chart.register(ChartDataLabels);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initIndexedDB();
+            checkLockoutStatus();
+            setDefaultFilterDates();
+
+            const savedGistUrl = localStorage.getItem('logistics_gist_url');
+            if (savedGistUrl) {
+                const urlInput = document.getElementById('gistUrlInput');
+                if (urlInput) urlInput.value = savedGistUrl;
+                connectToGist(savedGistUrl, true);
+            }
+        });
+
+        function checkLockoutStatus() {
+            const lockTime = localStorage.getItem('logistics_lock_ts');
+            if (lockTime) {
+                const diff = Date.now() - parseInt(lockTime);
+                if (diff < 15 * 60 * 1000) {
+                    const remaining = Math.ceil((15 * 60 * 1000 - diff) / 60000);
+                    setLoginLockoutState(remaining);
+                } else {
+                    localStorage.removeItem('logistics_lock_ts');
+                }
+            }
+        }
+
+        function setLoginLockoutState(mins) {
+            const alertBox = document.getElementById('loginAlert');
+            const loginBtn = document.getElementById('loginBtn');
+            alertBox.classList.remove('hidden');
+            alertBox.innerText = `⚠️ 帳號已鎖定，請於 ${mins} 分鐘後再試。`;
+            loginBtn.disabled = true;
+            loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        function handleLogin() {
+            const uInput = document.getElementById('usernameInput').value.trim();
+            const pInput = document.getElementById('passwordInput').value.trim();
+            const alertBox = document.getElementById('loginAlert');
+
+            if (localStorage.getItem('logistics_lock_ts')) {
+                checkLockoutStatus();
+                return;
+            }
+
+            let foundUser = DYNAMIC_USERS[uInput];
+            if (foundUser && foundUser.p === pInput) {
+                successAccess(foundUser.role, foundUser.roleName, foundUser.u);
+            } else {
+                loginFailCount++;
+                alertBox.classList.remove('hidden');
+                if (loginFailCount >= ABS_MAX_FAIL) {
+                    localStorage.setItem('logistics_lock_ts', Date.now().toString());
+                    setLoginLockoutState(15);
+                } else {
+                    alertBox.innerText = `❌ 帳號或密碼錯誤！(剩餘嘗試機會：${ABS_MAX_FAIL - loginFailCount} 次)`;
+                }
+            }
+        }
+
+        function successAccess(role, roleName, username) {
+            currentUserRole = role;
+            loginFailCount = 0;
+            
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            document.getElementById('currentUserName').innerText = username;
+            document.getElementById('currentUserRoleLbl').innerText = `權限：${roleName}`;
+
+            const navBtnBackstage = document.getElementById('navTab3'); 
+            const navBtnSpecialStores = document.getElementById('navTab4'); 
+            const navBtnReport = document.getElementById('navTab5');    
+
+            if (role === 'admin') {
+                navBtnBackstage.style.display = 'flex';
+                navBtnSpecialStores.style.display = 'flex';
+                navBtnReport.style.display = 'flex';
+            } else {
+                navBtnBackstage.style.display = 'none';
+                navBtnSpecialStores.style.display = 'none';
+                navBtnReport.style.display = 'none';
+            }
+            
+            switchTab(0);
+            loadLocalDataToMemory();
+        }
+
+        function handleLogout() {
+            currentUserRole = null;
+            document.getElementById('usernameInput').value = "";
+            document.getElementById('passwordInput').value = "";
+            document.getElementById('loginAlert').classList.add('hidden');
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        function switchTab(idx) {
+            if ((idx === 3 || idx === 4 || idx === 5) && currentUserRole !== 'admin') {
+                alert("⚠️ 權限不足：該分頁僅限最高管理者登入後存取！");
+                return;
+            }
+
+            currentTabIdx = idx;
+            const titles = ["服務EC履約時效", "明細查詢", "寄件數行事曆", "後台資料管理", "特殊店名單查詢", "每週履約時效簡報"];
+            document.getElementById('pageTitle').innerText = titles[idx] || "服務EC履約時效";
+
+            for (let i = 0; i < 6; i++) {
+                const tabBtn = document.getElementById(`navTab${i}`);
+                const tabContent = document.getElementById(`tabContent${i}`);
+                if (!tabBtn || !tabContent) continue;
+                if (i === idx) {
+                    tabBtn.className = "w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg bg-emerald-600 text-white text-left transition";
+                    tabContent.classList.remove('hidden');
+                } else {
+                    tabBtn.className = "w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition";
+                    if (i === 3) tabBtn.classList.add('border', 'border-dashed', 'border-slate-600', 'mt-1');
+                    if (i === 5) tabBtn.classList.add('border-t', 'border-slate-700', 'mt-2');
+                    tabContent.classList.add('hidden');
+                }
+            }
+            if (idx === 0) renderDashboard();
+            if (idx === 1) doQueryFiltering();
+            if (idx === 2) renderCalendarView();
+            if (idx === 3) renderAccountTable();
+            if (idx === 4) renderSpecialStoreTable();
+            if (idx === 5) renderWeeklyReport();
+        }
+
+        function setDefaultFilterDates() {
+            document.getElementById('filterStartDate').value = "2026-06-01";
+            document.getElementById('filterEndDate').value = "2026-06-30";
+            document.getElementById('searchStartDate').value = "2026-06-01";
+            document.getElementById('searchEndDate').value = "2026-06-30";
+            
+            document.getElementById('reportWeekStart').value = "2026-06-22";
+            document.getElementById('reportWeekEnd').value = "2026-06-28";
+        }
+
+        function resetDashboardDates() {
+            setDefaultFilterDates();
+            renderDashboard();
+        }
+
+        function formatDateStr(dateObj) {
+            let y = dateObj.getFullYear();
+            let m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            let d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function initIndexedDB() {
+            const request = indexedDB.open("LogisticsDB", 1);
+            request.onupgradeneeded = function(e) {
+                let db = e.target.result;
+                if (!db.objectStoreNames.contains("records")) {
+                    db.createObjectStore("records", { keyPath: "訂單編號" });
+                }
+                if (!db.objectStoreNames.contains("config")) {
+                    db.createObjectStore("config", { keyPath: "key" });
+                }
+            };
+            request.onsuccess = function(e) {
+                dbInstance = e.target.result;
+            };
+        }
+
+        function loadLocalDataToMemory() {
+            if (!dbInstance) {
+                setTimeout(loadLocalDataToMemory, 200);
+                return;
+            }
+            let tx = dbInstance.transaction(["records", "config"], "readonly");
+            let recStore = tx.objectStore("records");
+            let cfgStore = tx.objectStore("config");
+
+            let getAllRecs = recStore.getAll();
+            getAllRecs.onsuccess = function() {
+                GLOBAL_RECORDS = getAllRecs.result || [];
+                
+                let getVol = cfgStore.get("volumes");
+                getVol.onsuccess = function() {
+                    if (getVol.result) GLOBAL_VOLUMES = getVol.result.value || {};
+                    
+                    let getSpec = cfgStore.get("special_stores");
+                    if (getSpec.result) SPECIAL_STORES_LIST = getSpec.result.value || [];
+
+                    let getUsers = cfgStore.get("users");
+                    if (getUsers.result && getUsers.result.value) {
+                        DYNAMIC_USERS = getUsers.result.value;
+                    }
+                    
+                    renderDashboard();
+                };
+            };
+        }
+
+        function persistMemoryToDB() {
+            if (!dbInstance) return;
+            let tx = dbInstance.transaction(["records", "config"], "readwrite");
+            let recStore = tx.objectStore("records");
+            let cfgStore = tx.objectStore("config");
+
+            recStore.clear();
+            GLOBAL_RECORDS.forEach(r => recStore.put(r));
+            cfgStore.put({ key: "volumes", value: GLOBAL_VOLUMES });
+            cfgStore.put({ key: "special_stores", value: SPECIAL_STORES_LIST });
+            cfgStore.put({ key: "users", value: DYNAMIC_USERS });
+        }
+
+        function renderAccountTable() {
+            const body = document.getElementById('userAccountTableBody');
+            if (!body) return;
+            body.innerHTML = "";
+
+            Object.keys(DYNAMIC_USERS).forEach(username => {
+                const uObj = DYNAMIC_USERS[username];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+
+                const isProtected = username === 'admin';
+
+                tr.innerHTML = `
+                    <td class="p-3 font-bold font-mono text-slate-800 border-b">${uObj.u}</td>
+                    <td class="p-3 font-mono text-slate-500 border-b">•••••••• (${uObj.p})</td>
+                    <td class="p-3 border-b">
+                        <span class="px-2.5 py-1 rounded text-[14px] font-bold ${uObj.role === 'admin' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}">
+                            ${uObj.roleName}
+                        </span>
+                    </td>
+                    <td class="p-3 border-b text-center">
+                        ${isProtected ? '<span class="text-slate-400 text-[14px]">預設管理員鎖定</span>' : `
+                            <button onclick="deleteUserAccount('${uObj.u}')" class="text-red-500 hover:text-red-700 text-[15px] font-bold px-3 py-1 rounded hover:bg-red-50 transition">刪除帳號</button>
+                        `}
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function saveOrUpdateUserAccount() {
+            const u = document.getElementById('manageAccUsername').value.trim();
+            const p = document.getElementById('manageAccPassword').value.trim();
+            const role = document.getElementById('manageAccRole').value;
+
+            if (!u || !p) {
+                alert("❌ 請完整輸入帳號與密碼！");
+                return;
+            }
+
+            const roleName = role === 'admin' ? '最高管理者' : '一般檢視者';
+            DYNAMIC_USERS[u] = { u: u, p: p, role: role, roleName: roleName };
+
+            persistMemoryToDB();
+            renderAccountTable();
+
+            document.getElementById('manageAccUsername').value = "";
+            document.getElementById('manageAccPassword').value = "";
+            alert(`🎉 帳號 [${u}] 已成功儲存/更新！`);
+        }
+
+        function deleteUserAccount(username) {
+            if (username === 'admin') {
+                alert("❌ 預設最高管理員帳號不可被刪除！");
+                return;
+            }
+            if (!confirm(`確定要刪除帳號 [${username}] 嗎？`)) return;
+
+            delete DYNAMIC_USERS[username];
+            persistMemoryToDB();
+            renderAccountTable();
+            alert(`🗑️ 帳號 [${username}] 已移除。`);
+        }
+
+        function changeCalendarMonth(direction) {
+            calCurrentMonth += direction;
+            if (calCurrentMonth > 11) {
+                calCurrentMonth = 0;
+                calCurrentYear++;
+            } else if (calCurrentMonth < 0) {
+                calCurrentMonth = 11;
+                calCurrentYear--;
+            }
+            renderCalendarView();
+        }
+
+        function renderCalendarView() {
+            const gridBody = document.getElementById('calendarGridBody');
+            const monthLabel = document.getElementById('calendarMonthLabel');
+            if (!gridBody || !monthLabel) return;
+
+            gridBody.innerHTML = "";
+            monthLabel.innerText = `${calCurrentYear} 年 ${String(calCurrentMonth + 1).padStart(2, '0')} 月`;
+
+            const firstDayInstance = new Date(calCurrentYear, calCurrentMonth, 1);
+            const startDayOfWeek = firstDayInstance.getDay(); 
+            const totalDaysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < startDayOfWeek; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "bg-slate-50/40 rounded-xl min-h-[95px] border border-dashed border-slate-100 opacity-30";
+                gridBody.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const formattedCellDateStr = `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const currentVolume = GLOBAL_VOLUMES[formattedCellDateStr] || 0;
+
+                const cell = document.createElement('div');
+                cell.className = "bg-morandi-peisong-op hover:bg-slate-100 border border-slate-200 rounded-xl p-3.5 min-h-[100px] flex flex-col justify-between text-left cursor-pointer transition transform hover:-translate-y-0.5 shadow-sm";
+                cell.onclick = () => handleCalendarCellClick(formattedCellDateStr, currentVolume);
+
+                const todayStr = formatDateStr(new Date());
+                if (formattedCellDateStr === todayStr) {
+                    cell.classList.add('border-2', 'border-emerald-500', 'ring-2', 'ring-emerald-100');
+                }
+
+                cell.innerHTML = `
+                    <span class="text-[16px] font-black font-mono text-slate-900 drop-shadow-sm">${day}</span>
+                    <div class="text-right">
+                        <span class="text-[15px] font-extrabold block ${currentVolume > 0 ? 'text-slate-800' : 'text-slate-300'}">
+                            ${currentVolume > 0 ? currentVolume.toLocaleString() : '0'} 件
+                        </span>
+                    </div>
+                `;
+                gridBody.appendChild(cell);
+            }
+            lucide.createIcons();
+        }
+
+        function handleCalendarCellClick(dateStr, oldVal) {
+            const newValStr = prompt(`📝 正在直接修改 [${dateStr}] 的每日寄件總數
+目前設定件數：${oldVal.toLocaleString()} 件
+
+請輸入新的寄件總數：`, oldVal);
+            if (newValStr === null) return; 
+
+            const newVal = parseInt(newValStr.replace(/,/g, ''));
+            if (isNaN(newVal) || newVal < 0) {
+                alert("❌ 請輸入大於或等於 0 的正確整數數值！");
+                return;
+            }
+
+            GLOBAL_VOLUMES[dateStr] = newVal;
+            persistMemoryToDB();
+            renderCalendarView();
+            renderDashboard();
+            if (currentTabIdx === 1) { doQueryFiltering(); }
+        }
+
+        function cleanWarehouseName(rawWh) {
+            if (!rawWh) return "其他";
+            let s = String(rawWh).trim().toUpperCase();
+            if (s.includes("大溪")) return "大溪倉";
+            if (s.includes("岡山")) return "岡山倉";
+            if (s.includes("大肚")) return "大肚倉";
+            if (s.includes("蘆竹")) return "蘆竹";
+            if (s.includes("店")) return "店舖";
+            return "其他"; 
+        }
+
+        function parseExcelDate(val) {
+            if (!val || String(val).trim() === "") return null;
+            let s = String(val).trim().replace(/\//g, '-');
+            
+            if (/^\d{8}$/.test(s)) {
+                let y = parseInt(s.substring(0, 4));
+                let m = parseInt(s.substring(4, 6)) - 1;
+                let d = parseInt(s.substring(6, 8));
+                let date = new Date(y, m, d);
+                return isNaN(date.getTime()) ? null : date;
+            }
+
+            if (/^\d+(\.\d+)?$/.test(s)) {
+                let num = parseFloat(s);
+                let date = new Date((num - 25569) * 86400 * 1000);
+                if (!isNaN(date.getTime()) && date.getFullYear() === 2001) {
+                    date.setFullYear(2026);
+                }
+                return isNaN(date.getTime()) ? null : date;
+            }
+            
+            let matchYMD = s.match(/^(\d+)[-/](\d+)[-/](\d+)/);
+            if (matchYMD) {
+                let y = parseInt(matchYMD[1]);
+                let m = parseInt(matchYMD[2]) - 1;
+                let d = parseInt(matchYMD[3]);
+                if (y < 1911) y += 1911; 
+                let date = new Date(y, m, d);
+                return isNaN(date.getTime()) ? null : date;
+            }
+
+            let parsed = new Date(s);
+            if (!isNaN(parsed.getTime()) && parsed.getFullYear() === 2001) {
+                parsed.setFullYear(2026);
+            }
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function formatDateToYMD(dateObj) {
+            if (!dateObj) return "";
+            return formatDateStr(dateObj);
+        }
+
+        function isSpecialStoreMatch(storeNo, sendStoreName, getStoreName) {
+            storeNo = String(storeNo || "").trim().toUpperCase();
+            sendStoreName = String(sendStoreName || "").trim().toUpperCase();
+            getStoreName = String(getStoreName || "").trim().toUpperCase();
+
+            if (storeNo.includes('K')) return true;
+
+            return SPECIAL_STORES_LIST.some(item => {
+                let sId = String(item.id || "").toUpperCase();
+                let sName = String(item.name || "").toUpperCase();
+                return (sId && (storeNo === sId || sendStoreName.includes(sId) || getStoreName.includes(sId))) ||
+                       (sName && (sendStoreName.includes(sName) || getStoreName.includes(sName)));
+            });
+        }
+
+        function run12RulesLogisticsEngine(row) {
+            let ref_time = new Date("2026-06-30T23:59:59").getTime(); 
+
+            const combineDateTime = (dCol, tCol) => {
+                let d = String(row[dCol] || "").trim();
+                let t = String(row[tCol] || "").trim();
+                if (d && t) return `${d} ${t}`;
+                return row[tCol] || row[dCol] || "";
+            };
+
+            const t_send = parseExcelDate(combineDateTime('寄件日', '寄件時間') || row['日期'] || row['寄件日']);
+            const t_leave = parseExcelDate(combineDateTime('離店日', '離店時間') || row['離店日']);
+            const t_check = parseExcelDate(combineDateTime('驗收日', '驗收時間') || row['驗收日']);
+            const t_read = parseExcelDate(combineDateTime('理貨設備讀取日期', '理貨設備讀取時間'));
+            const t_box = parseExcelDate(combineDateTime('理貨PDA裝箱日期', '理貨PDA裝箱時間'));
+            const t_plate = parseExcelDate(combineDateTime('理貨疊板日期', '理貨疊板時間'));
+            const t_unloading = parseExcelDate(combineDateTime('運務士卸貨日期', '運務士卸貨時間'));
+            const t_arrive = parseExcelDate(combineDateTime('到店日', '到店驗收時間'));
+            const t_shop_fix = parseExcelDate(row['店舖壓缺時間']);
+
+            const val_err_reason = String(row['異常點交原因'] || "").trim();
+            const send_store_name = String(row['寄件店名'] || "").trim().toUpperCase();
+            const get_store_name = String(row['取件店名'] || "").trim().toUpperCase();
+            const send_store_id = String(row['寄件店號'] || row['店號'] || "").trim().toUpperCase();
+            const get_store_id = String(row['取件店號'] || "").trim().toUpperCase();
+            
+            const acct = String(row['離店帳號'] || row['離店帳'] || "").trim();
+            const area_str = String(row['寄件店行政區'] || "").trim();
+
+            const hrs_diff = (d2, d1) => {
+                if (!d2 || !d1) return 0;
+                return (d2.getTime() - d1.getTime()) / 3600000;
+            };
+
+            let main_reason = "正常";
+
+            if (val_err_reason !== "" && !val_err_reason.includes("分類錯誤")) {
+                main_reason = "01 異常點交";
+            }
+            else if (t_shop_fix !== null) {
+                main_reason = "02 店舖修正";
+            }
+            else if (isSpecialStoreMatch(send_store_id, send_store_name, get_store_name) || send_store_id.includes('K') || get_store_id.includes('K')) {
+                main_reason = "03 離島/特殊店";
+            }
+            else if (
+                (t_send && t_leave && hrs_diff(t_leave, t_send) > 24) ||
+                (t_send && !t_leave && t_check && hrs_diff(t_check, t_send) > 32) ||
+                (t_send && !t_leave && !t_check && !t_read && !t_box && !t_unloading && !t_arrive)
+            ) {
+                main_reason = area_str.includes("蘆竹") ? "07 店舖晚交寄(蘆竹)" : "08 店舖晚交寄";
+            }
+            else if (
+                ['MING_CHANG-API', 'EC100-API'].includes(acct) && 
+                ((t_send && t_check && hrs_diff(t_check, t_send) > 24) || (t_leave && !t_check && !t_box))
+            ) {
+                main_reason = "06 延遲返廠(上收)-商流";
+            }
+            else if (
+                ['REYI-C-API', 'REYI-API'].includes(acct) && 
+                ((t_send && t_check && hrs_diff(t_check, t_send) > 24) || (t_leave && !t_check && !t_box))
+            ) {
+                main_reason = "17 延遲返廠(上收)-物流";
+            }
+            else if (
+                (t_box && t_arrive && hrs_diff(t_arrive, t_box) > 24) ||
+                (t_unloading && t_arrive && hrs_diff(t_arrive, t_unloading) > 12) ||
+                (t_unloading && !t_arrive && hrs_diff(new Date(ref_time), t_unloading) > 12) ||
+                (t_plate && !t_arrive && !t_unloading && hrs_diff(new Date(ref_time), t_plate) > 18) ||
+                (t_box && !t_plate && !t_unloading && !t_arrive)
+            ) {
+                main_reason = "19 延遲配送";
+            }
+            else if (
+                (t_leave && t_check && hrs_diff(t_check, t_leave) > 24) ||
+                (t_leave && !t_check && !t_box && !t_arrive)
+            ) {
+                main_reason = "18 延遲返廠";
+            }
+            else if (!t_box && t_arrive) {
+                main_reason = "16 PDA漏刷進店";
+            }
+            else if (
+                (t_leave && t_check && (() => {
+                    let h_leave = t_leave.getHours();
+                    let m_leave = t_leave.getMinutes();
+                    let time_val = h_leave * 100 + m_leave;
+                    if (time_val > 1400) {
+                        let next_day_noon = new Date(t_leave);
+                        next_day_noon.setDate(next_day_noon.getDate() + 1);
+                        next_day_noon.setHours(12, 0, 0, 0);
+                        return t_check > next_day_noon;
+                    } else if (time_val > 900) {
+                        return hrs_diff(t_check, t_leave) > 12;
+                    } else {
+                        let same_day_noon = new Date(t_leave);
+                        same_day_noon.setHours(12, 0, 0, 0);
+                        return t_check > same_day_noon;
+                    }
+                })()) ||
+                (t_check && !t_read && !t_box && !t_arrive)
+            ) {
+                main_reason = "11 延遲驗收";
+            }
+            else if (val_err_reason.includes("分類錯誤")) {
+                main_reason = "13 驗收/轉運錯誤";
+            }
+            else if (
+                (t_check && t_box && (() => {
+                    if (t_check.getHours() < 12) {
+                        return t_box.getDate() > t_check.getDate();
+                    } else {
+                        let nextDay = new Date(t_check);
+                        nextDay.setDate(nextDay.getDate() + 1);
+                        return t_box.getDate() > nextDay.getDate();
+                    }
+                })()) ||
+                (t_read && !t_box && !t_arrive)
+            ) {
+                let v_wh = cleanWarehouseName(row['驗收倉']);
+                let o_wh = cleanWarehouseName(row['出貨倉']);
+                main_reason = (v_wh !== o_wh) ? "14 延遲裝箱(跨倉)" : "15 延遲裝箱(當倉)";
+            }
+
+            let resp_unit = "其他";
+            if (main_reason.includes("11 延遲驗收")) {
+                resp_unit = "驗收";
+            } else if (["14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)", "16 PDA漏刷進店"].some(x => main_reason.includes(x))) {
+                resp_unit = "理貨";
+            } else if (["18 延遲返廠", "19 延遲配送"].some(x => main_reason.includes(x))) {
+                resp_unit = "運務"; 
+            }
+
+            let resp_wh = "其他";
+            let v_wh = cleanWarehouseName(row['驗收倉']);
+            let o_wh = cleanWarehouseName(row['出貨倉']);
+            let l_wh = cleanWarehouseName(row['離店倉別'] || row['離店倉']);
+
+            if (main_reason.includes("11 延遲驗收")) {
+                resp_wh = v_wh;
+            } else if (["14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)", "16 PDA漏刷進店", "19 延遲配送"].some(x => main_reason.includes(x))) {
+                resp_wh = o_wh;
+            } else if (main_reason.includes("18 延遲返廠")) {
+                resp_wh = l_wh;
+            } else if (["02 店舖修正", "07 店舖晚交寄(蘆竹)", "08 店舖晚交寄"].some(x => main_reason.includes(x))) {
+                resp_wh = "店舖";
+            }
+
+            row['[延遲主因]'] = main_reason;
+            row['[責任歸屬倉別]'] = resp_wh;
+            row['[責任歸屬單位]'] = resp_unit;
+            return row;
+        }
+
+        function processSectionARawData(rows) {
+            let addCount = 0;
+            const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+
+            rows.forEach(rawRow => {
+                let orderId = String(rawRow['訂單編號'] || rawRow['單號'] || "").trim();
+                if (!orderId) return;
+
+                rawRow['訂單編號'] = orderId;
+                rawRow['店號'] = String(rawRow['寄件店號'] || rawRow['店號'] || "").trim();
+                rawRow['倉別'] = cleanWarehouseName(rawRow['出貨倉'] || rawRow['倉別']);
+
+                let dObj = parseExcelDate(rawRow['寄件日'] || rawRow['日期'] || rawRow['寄件時間']);
+                if (dObj) {
+                    rawRow['日期'] = formatDateToYMD(dObj);
+                    rawRow['星期'] = weekNames[dObj.getDay()];
+                } else {
+                    rawRow['日期'] = String(rawRow['日期'] || "").trim();
+                }
+
+                let analyzed = run12RulesLogisticsEngine(rawRow);
+                analyzed['[原始自動判定原因]'] = analyzed['[延遲主因]'];
+
+                let idx = GLOBAL_RECORDS.findIndex(x => x.訂單編號 === orderId);
+                if (idx > -1) {
+                    GLOBAL_RECORDS[idx] = analyzed;
+                } else {
+                    GLOBAL_RECORDS.push(analyzed);
+                    addCount++;
+                }
+            });
+
+            persistMemoryToDB();
+            alert(`🎉 原始物流大表分析完成！成功載入並核對 ${addCount} 筆營運明細。`);
+            renderDashboard();
+        }
+
+        function processSectionBManualFix(rows) {
+            let fixCount = 0;
+            rows.forEach(fixRow => {
+                let orderId = String(fixRow['訂單編號'] || fixRow['單號'] || "").trim();
+                if (!orderId) return;
+
+                let idx = GLOBAL_RECORDS.findIndex(x => x.訂單編號 === orderId);
+                if (idx > -1) {
+                    let mReason = String(fixRow['延遲原因'] || fixRow['[人工修正原因]'] || "").trim();
+                    let mWh = String(fixRow['責任歸屬倉別'] || fixRow['[責任歸屬倉別]'] || "").trim();
+                    let mUnit = String(fixRow['責任歸屬單位'] || fixRow['[責任歸屬單位]'] || "").trim();
+
+                    if (mReason || mWh || mUnit) {
+                        if (!GLOBAL_RECORDS[idx]['[原始自動判定原因]']) {
+                            GLOBAL_RECORDS[idx]['[原始自動判定原因]'] = GLOBAL_RECORDS[idx]['[延遲主因]'];
+                        }
+
+                        if (mReason) GLOBAL_RECORDS[idx]['[延遲主因]'] = mReason;
+                        if (mWh) GLOBAL_RECORDS[idx]['[責任歸屬倉別]'] = cleanWarehouseName(mWh);
+                        if (mUnit) GLOBAL_RECORDS[idx]['[責任歸屬單位]'] = (mUnit === '配送') ? '運務' : mUnit;
+                        GLOBAL_RECORDS[idx]['[人工修正原因]'] = mReason; 
+                        fixCount++;
+                    }
+                }
+            });
+            persistMemoryToDB();
+            alert(`🔨 人工原因名冊覆寫完成！共精準修正了 ${fixCount} 筆核心延遲指標。`);
+            renderDashboard();
+        }
+
+        function processSectionCSpecialStores(rows) {
+            SPECIAL_STORES_LIST = [];
+
+            rows.forEach(r => {
+                let id = String(r['店號'] || r['門市店號'] || "").trim();
+                let name = String(r['店名'] || r['門市名稱'] || "").trim();
+                let route = String(r['路線路順'] || r['路線'] || "").trim();
+                let note = String(r['備註'] || r['備註說明'] || "").trim();
+                
+                if (id || name) {
+                    SPECIAL_STORES_LIST.push({ id: id, name: name, route: route, note: note });
+                }
+            });
+
+            if (GLOBAL_RECORDS.length > 0) {
+                GLOBAL_RECORDS = GLOBAL_RECORDS.map(row => {
+                    if (row['[延遲主因]'] && !row['[人工修正原因]']) {
+                        let reCal = run12RulesLogisticsEngine(row);
+                        reCal['[原始自動判定原因]'] = reCal['[延遲主因]'];
+                        return reCal;
+                    }
+                    return row;
+                });
+            }
+
+            persistMemoryToDB();
+            alert(`📍 特殊店與離島門市名冊匯入完成！
+成功載入 ${SPECIAL_STORES_LIST.length} 家門市（含路線與備註），並已同步重新校正歷史庫數據。`);
+            renderSpecialStoreTable();
+            if (currentTabIdx === 0) renderDashboard();
+        }
+
+        function processSectionDHorizontalVolumes(worksheet) {
+            const arr = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
+            if (arr.length < 2) { alert("❌ 檔案結構錯誤：橫式雙列數據矩陣列數不足。"); return; }
+
+            let datesRow = arr[0]; 
+            let valuesRow = arr[1]; 
+            
+            if (String(datesRow[0]).trim() !== "日期" || String(valuesRow[0]).trim() !== "寄件數") {
+                alert("❌ 範本格式不符：A1 必須為 '日期' 且 A2 必須為 '寄件數'。");
+                return;
+            }
+
+            let importCount = 0;
+            for (let colIdx = 1; colIdx < datesRow.length; colIdx++) {
+                let rawDateStr = String(datesRow[colIdx]).trim();
+                let rawValStr = String(valuesRow[colIdx]).trim();
+
+                if (!rawDateStr || rawDateStr === "") continue;
+
+                let dObj = parseExcelDate(rawDateStr);
+                let finalizedYMD = dObj ? formatDateStr(dObj) : null;
+
+                if (!finalizedYMD) continue;
+
+                let cleanedVal = parseInt(rawValStr.replace(/,/g, ''));
+                if (isNaN(cleanedVal)) cleanedVal = 0;
+
+                GLOBAL_VOLUMES[finalizedYMD] = cleanedVal;
+                importCount++;
+            }
+
+            persistMemoryToDB();
+            alert(`🎉 第四區橫式寄件數大表解析成功！共匯入 ${importCount} 天的數據大底。`);
+            renderDashboard();
+        }
+
+        function getFilteredDataset() {
+            const start = document.getElementById('filterStartDate').value;
+            const end = document.getElementById('filterEndDate').value;
+            
+            return GLOBAL_RECORDS.filter(r => {
+                if (!r.日期) return false;
+                return r.日期 >= start && r.日期 <= end;
+            });
+        }
+
+        function renderDashboard() {
+            if (currentTabIdx !== 0) return;
+            const data = getFilteredDataset();
+
+            const rootStyle = getComputedStyle(document.documentElement);
+            const cLihuo = rootStyle.getPropertyValue('--color-lihuo').trim();
+            const cPeisong = rootStyle.getPropertyValue('--color-peisong').trim();
+            const cYanshou = rootStyle.getPropertyValue('--color-yanshou').trim();
+            const cReasons = rootStyle.getPropertyValue('--color-reasons').trim();
+            const cTrend = rootStyle.getPropertyValue('--color-trend').trim();
+
+            const start = document.getElementById('filterStartDate').value;
+            const end = document.getElementById('filterEndDate').value;
+            let totalVolume = 0;
+            let hasManualInput = false;
+
+            let cur = new Date(start);
+            const stopDate = new Date(end);
+            while (cur <= stopDate) {
+                let sStr = formatDateStr(cur);
+                if (GLOBAL_VOLUMES[sStr]) {
+                    totalVolume += GLOBAL_VOLUMES[sStr];
+                    hasManualInput = true;
+                }
+                cur.setDate(cur.getDate() + 1);
+            }
+
+            if (!hasManualInput || totalVolume === 0) {
+                totalVolume = data.length; 
+            }
+
+            const delayRows = data.filter(r => r['[延遲主因]'] !== "正常");
+            
+            const allCnt03 = delayRows.filter(r => r['[延遲主因]'] === "03 離島/特殊店").length;
+            const allCnt06 = delayRows.filter(r => r['[延遲主因]'] === "06 延遲返廠(上收)-商流").length;
+            const globalDelaysFix = delayRows.length - allCnt03 - allCnt06;
+
+            const mainWhs = ['大溪倉', '岡山倉', '大肚倉'];
+            const chartCoreRows = delayRows.filter(r => mainWhs.includes(r['[責任歸屬倉別]']));
+            
+            const coreCnt03 = chartCoreRows.filter(r => r['[延遲主因]'] === "03 離島/特殊店").length;
+            const coreCnt06 = chartCoreRows.filter(r => r['[延遲主因]'] === "06 延遲返廠(上收)-商流").length;
+            const coreTargetDelays = chartCoreRows.length - coreCnt03 - coreCnt06; 
+
+            let slaRate = 0;
+            if (totalVolume > 0) {
+                slaRate = ((totalVolume - globalDelaysFix) / totalVolume) * 100;
+            }
+
+            document.getElementById('kpiTotalPackages').innerText = totalVolume.toLocaleString();
+            document.getElementById('kpiTotalDelays').innerText = globalDelaysFix.toLocaleString(); 
+            document.getElementById('kpiCoreDelays').innerText = coreTargetDelays.toLocaleString();  
+            document.getElementById('kpiSlaRate').innerText = `${slaRate.toFixed(2)}%`;
+
+            let unitCounts = { 理貨: 0, 運務: 0, 專屬驗收: 0 };
+            let whGroupData = { 
+                大溪倉: { 理貨: 0, 運務: 0, 驗收: 0 }, 
+                岡山倉: { 理貨: 0, 運務: 0, 驗收: 0 }, 
+                大肚倉: { 理貨: 0, 運務: 0, 驗收: 0 } 
+            };
+            let reasonMap = {};
+            let trendMap = {};
+
+            chartCoreRows.forEach(r => {
+                let u = r['[責任歸屬單位]'] || "其他";
+                let w_real = r['[責任歸屬倉別]'] || "其他";
+                let reas = r['[延遲主因]'] || "未定義異常";
+                let d = r.日期;
+
+                if (u === "驗收") unitCounts.專屬驗收++;
+                else if (u === "理貨") unitCounts.理貨++;
+                else if (u === "配送" || u === "運務") unitCounts.運務++; 
+
+                if (whGroupData[w_real]) {
+                    let mapU = u === "驗收" ? "驗收" : (u === "理貨" ? "理貨" : ((u === "配送" || u === "運務") ? "運務" : null));
+                    if (mapU && whGroupData[w_real][mapU] !== undefined) whGroupData[w_real][mapU]++;
+                }
+
+                reasonMap[reas] = (reasonMap[reas] || 0) + 1;
+                trendMap[d] = (trendMap[d] || 0) + 1;
+            });
+
+            // 1. 責任單位異常佔比分析
+            if (chartInstances.unit) chartInstances.unit.destroy();
+            chartInstances.unit = new Chart(document.getElementById('chartUnit'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['理貨單位', '運務單位', '驗收單位'],
+                    datasets: [{
+                        data: [unitCounts.理貨, unitCounts.運務, unitCounts.專屬驗收],
+                        backgroundColor: [cLihuo, cPeisong, cYanshou]
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { font: { size: 15, weight: 'bold' } } },
+                        datalabels: {
+                            color: '#FFFFFF',
+                            font: { weight: 'bold', size: 16 },
+                            anchor: 'center',
+                            align: 'center',
+                            formatter: function(value) { return value > 0 ? value.toLocaleString() + ' 件' : ''; }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'centerText',
+                    beforeDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        ctx.restore();
+                        
+                        const chartArea = chart.chartArea;
+                        if (!chartArea) return;
+                        
+                        const centerX = (chartArea.left + chartArea.right) / 2;
+                        const centerY = (chartArea.top + chartArea.bottom) / 2 + 4;
+                        
+                        const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        
+                        ctx.font = "bold 16px sans-serif";
+                        ctx.fillStyle = "#4A5568"; 
+                        ctx.fillText("合計件數", centerX, centerY - 14);
+                        
+                        ctx.font = "extrabold 24px font-mono, sans-serif";
+                        ctx.fillStyle = "#1A202C"; 
+                        ctx.fillText(total.toLocaleString() + " 件", centerX, centerY + 14);
+                        
+                        ctx.save();
+                    }
+                }]
+            });
+
+            // 2. 各倉延遲件數
+            const whTotals = mainWhs.map(w => whGroupData[w].理貨 + whGroupData[w].運務 + whGroupData[w].驗收);
+            const mainWhsWithTotals = mainWhs.map((w, idx) => `${w} (共 ${whTotals[idx].toLocaleString()} 件)`);
+
+            if (chartInstances.whStack) chartInstances.whStack.destroy();
+            chartInstances.whStack = new Chart(document.getElementById('chartWarehouseStack'), {
+                type: 'bar',
+                data: {
+                    labels: mainWhsWithTotals,
+                    datasets: [
+                        { label: '理貨', data: mainWhs.map(w => whGroupData[w].理貨), backgroundColor: cLihuo }, 
+                        { label: '運務', data: mainWhs.map(w => whGroupData[w].運務), backgroundColor: cPeisong }, 
+                        { label: '驗收', data: mainWhs.map(w => whGroupData[w].驗收), backgroundColor: cYanshou }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        x: { stacked: false, ticks: { font: { size: 15, weight: 'bold' } } }, 
+                        y: { stacked: false, grace: '15%', ticks: { font: { size: 15 } } } 
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 15, weight: 'bold' } } },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderRadius: 4,
+                            padding: { top: 2, bottom: 2, left: 5, right: 5 },
+                            color: '#334155',
+                            font: { weight: 'bold', size: 15 },
+                            display: true,
+                            formatter: function(value) { return value > 0 ? value.toLocaleString() : ''; }
+                        }
+                    }
+                }
+            });
+
+            // 3. 物流延遲原因排行分佈 (莫蘭迪暖金黃 #D9A05B)
+            let sortedReasons = Object.entries(reasonMap).sort((a, b) => b[1] - a[1]);
+            if (chartInstances.reasons) chartInstances.reasons.destroy();
+            chartInstances.reasons = new Chart(document.getElementById('chartReasons'), {
+                type: 'bar',
+                data: {
+                    labels: sortedReasons.map(x => x[0].replace(/^\d+\s*/, '')),
+                    datasets: [{ 
+                        label: '異常排行件數', 
+                        data: sortedReasons.map(x => x[1]), 
+                        backgroundColor: cReasons
+                    }]
+                },
+                options: { 
+                    indexAxis: 'y', 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        x: { grace: '10%', ticks: { font: { size: 15 } } },
+                        y: { ticks: { font: { size: 15, weight: 'bold' } } }
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#4A5568', 
+                            anchor: 'end',
+                            align: 'right',
+                            font: { weight: 'bold', size: 16 },
+                            formatter: function(value) { return value > 0 ? value.toLocaleString() : ''; }
+                        }
+                    }
+                }
+            });
+
+            // 4. 物流責任件數趨勢走勢圖 (明亮天藍色 #3B82F6)
+            let sortedDates = Object.keys(trendMap).sort();
+            if (chartInstances.trend) chartInstances.trend.destroy();
+            chartInstances.trend = new Chart(document.getElementById('chartTrend'), {
+                type: 'line',
+                data: {
+                    labels: sortedDates.map(d => d.slice(5).replace('-', '/')),
+                    datasets: [{ 
+                        label: '物流責任件數', 
+                        data: sortedDates.map(d => trendMap[d]), 
+                        borderColor: cTrend, 
+                        backgroundColor: cTrend,
+                        fill: false, 
+                        tension: 0.1 
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { 
+                        x: { ticks: { font: { size: 15 } } },
+                        y: { grace: '10%', ticks: { font: { size: 15 } } }
+                    },
+                    plugins: {
+                        legend: { labels: { font: { size: 15, weight: 'bold' } } },
+                        datalabels: {
+                            color: '#4A5568', 
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            font: { weight: 'bold', size: 15 },
+                            formatter: function(value) { return value > 0 ? value.toLocaleString() : ''; }
+                        }
+                    }
+                }
+            });
+
+            renderCalendarView();
+        }
+
+        function renderSpecialStoreTable() {
+            const body = document.getElementById('specialStoreTableBody');
+            const countLbl = document.getElementById('specialStoreCount');
+            const kw = document.getElementById('searchSpecialStoreInput').value.trim().toUpperCase();
+
+            countLbl.innerText = `${SPECIAL_STORES_LIST.length.toLocaleString()} 家`;
+
+            const filteredStores = SPECIAL_STORES_LIST.filter(item => {
+                if (!kw) return true;
+                return (item.id && String(item.id).toUpperCase().includes(kw)) || 
+                       (item.name && String(item.name).toUpperCase().includes(kw)) ||
+                       (item.route && String(item.route).toUpperCase().includes(kw)) ||
+                       (item.note && String(item.note).toUpperCase().includes(kw));
+            });
+
+            body.innerHTML = "";
+            if (filteredStores.length === 0) {
+                body.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">查無符合條件的門市資料。</td></tr>`;
+                return;
+            }
+
+            filteredStores.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-3.5 border-b text-center text-slate-400 font-mono">${i + 1}</td>
+                    <td class="p-3.5 border-b font-mono font-bold text-slate-800">${item.id || "--"}</td>
+                    <td class="p-3.5 border-b font-bold text-slate-700">${item.name || "--"}</td>
+                    <td class="p-3.5 border-b font-mono text-slate-500">${item.route || "--"}</td>
+                    <td class="p-3.5 border-b text-slate-600 font-medium">${item.note || "--"}</td>
+                    <td class="p-3.5 border-b">
+                        <span class="inline-block whitespace-nowrap px-2.5 py-1 rounded text-[13px] font-bold bg-blue-50 text-blue-600 border border-blue-200">
+                            03 離島/特殊店連動中
+                        </span>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function exportSpecialStoresToExcel() {
+            if (SPECIAL_STORES_LIST.length === 0) {
+                alert("⚠️ 目前尚無特殊店名單資料可供匯出。");
+                return;
+            }
+            const exportData = SPECIAL_STORES_LIST.map((item, idx) => ({
+                "項次": idx + 1,
+                "門市店號": item.id || "",
+                "門市名稱": item.name || "",
+                "路線路順": item.route || "",
+                "備註說明": item.note || "",
+                "狀態": "03 離島/特殊店"
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "特殊店名冊明細");
+            XLSX.writeFile(workbook, `離島及特殊店名冊明細_${formatDateStr(new Date())}.xlsx`);
+        }
+
+        function renderWeeklyReport() {
+            const startStr = document.getElementById('reportWeekStart').value;
+            const endStr = document.getElementById('reportWeekEnd').value;
+            if (!startStr || !endStr) return;
+
+            const dtCurrStart = new Date(startStr);
+            const dtCurrEnd = new Date(endStr);
+
+            const dtW1Start = new Date(dtCurrStart); dtW1Start.setDate(dtW1Start.getDate() - 7);
+            const dtW1End = new Date(dtCurrEnd); dtW1End.setDate(dtW1End.getDate() - 7);
+
+            const dtW2Start = new Date(dtCurrStart); dtW2Start.setDate(dtW2Start.getDate() - 14);
+            const dtW2End = new Date(dtCurrEnd); dtW2End.setDate(dtW2End.getDate() - 14);
+
+            const formatMD = (d1, d2) => `${d1.getMonth()+1}/${d1.getDate()}-${d2.getMonth()+1}/${d2.getDate()}`;
+            const headerStr = `出貨日 ${formatMD(dtCurrStart, dtCurrEnd)}`;
+            
+            document.getElementById('rptDateRangeLbl1').innerText = `統計區間：${headerStr}`;
+            document.getElementById('rptDateRangeLbl2').innerText = `統計區間：${headerStr}`;
+
+            document.getElementById('rptWeekHeader0').innerText = `本週合計 (${formatMD(dtCurrStart, dtCurrEnd)})`;
+            document.getElementById('rptWeekHeader1').innerText = `前一週合計 (${formatMD(dtW1Start, dtW1End)})`;
+            document.getElementById('rptWeekHeader2').innerText = `前二週合計 (${formatMD(dtW2Start, dtW2End)})`;
+
+            const getRangeData = (s, e) => GLOBAL_RECORDS.filter(r => r.日期 >= formatDateStr(s) && r.日期 <= formatDateStr(e));
+            const dataW0 = getRangeData(dtCurrStart, dtCurrEnd);
+            const dataW1 = getRangeData(dtW1Start, dtW1End);
+            const dataW2 = getRangeData(dtW2Start, dtW2End);
+
+            const getVol = (s, e) => {
+                let total = 0, cur = new Date(s), stop = new Date(e);
+                while(cur <= stop) {
+                    let key = formatDateStr(cur);
+                    if (GLOBAL_VOLUMES[key]) total += GLOBAL_VOLUMES[key];
+                    cur.setDate(cur.getDate() + 1);
+                }
+                return total;
+            };
+
+            let vol0 = getVol(dtCurrStart, dtCurrEnd) || dataW0.length;
+            let vol1 = getVol(dtW1Start, dtW1End) || dataW1.length;
+            let vol2 = getVol(dtW2Start, dtW2End) || dataW2.length;
+
+            const calcRatio = (curr, prev) => prev > 0 ? ((curr / prev) * 100).toFixed(2) + '%' : '0.00%';
+
+            const getReasonCnt = (dataset, reasonName) => dataset.filter(r => r['[延遲主因]'] === reasonName).length;
+
+            let logisticsList = [
+                { name: "延遲返廠", key: "18 延遲返廠" },
+                { name: "延遲驗收", key: "11 延遲驗收" },
+                { name: "延遲轉運", key: "13 驗收/轉運錯誤" },
+                { name: "延遲裝箱", key: "15 延遲裝箱(當倉)" },
+                { name: "PDA漏刷進店", key: "16 PDA漏刷進店" },
+                { name: "延遲配送", key: "19 延遲配送" }
+            ];
+
+            let tbody = document.getElementById('rptMainTableBody');
+            tbody.innerHTML = "";
+
+            let d2_0 = vol0 - dataW0.filter(r => r['[延遲主因]'] !== "正常").length;
+            let d2_1 = vol1 - dataW1.filter(r => r['[延遲主因]'] !== "正常").length;
+            let d2_2 = vol2 - dataW2.filter(r => r['[延遲主因]'] !== "正常").length;
+
+            let mainRowsHTML = `
+                <tr>
+                    <td class="p-2 border font-semibold bg-slate-50" colspan="2">寄件數</td>
+                    <td class="p-2 border">${vol2.toLocaleString()}</td>
+                    <td class="p-2 border">${vol1.toLocaleString()}</td>
+                    <td class="p-2 border font-bold bg-blue-50">${vol0.toLocaleString()}</td>
+                    <td class="p-2 border font-semibold">${calcRatio(vol0, vol1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border font-semibold bg-slate-50" rowspan="2">D+2以內</td>
+                    <td class="p-2 border text-left">件數</td>
+                    <td class="p-2 border">${d2_2.toLocaleString()}</td>
+                    <td class="p-2 border">${d2_1.toLocaleString()}</td>
+                    <td class="p-2 border font-bold bg-blue-50">${d2_0.toLocaleString()}</td>
+                    <td class="p-2 border font-semibold">${calcRatio(d2_0, d2_1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border text-left">佔比</td>
+                    <td class="p-2 border">${(vol2 > 0 ? (d2_2/vol2*100).toFixed(2) : '0')}%</td>
+                    <td class="p-2 border">${(vol1 > 0 ? (d2_1/vol1*100).toFixed(2) : '0')}%</td>
+                    <td class="p-2 border font-bold bg-blue-50">${(vol0 > 0 ? (d2_0/vol0*100).toFixed(2) : '0')}%</td>
+                    <td class="p-2 border font-semibold">${calcRatio(d2_0, d2_1)}</td>
+                </tr>
+            `;
+
+            tbody.innerHTML += mainRowsHTML;
+
+            let logiSum0 = 0, logiSum1 = 0, logiSum2 = 0;
+            logisticsList.forEach(item => {
+                let c0 = getReasonCnt(dataW0, item.key);
+                let c1 = getReasonCnt(dataW1, item.key);
+                let c2 = getReasonCnt(dataW2, item.key);
+                logiSum0 += c0; logiSum1 += c1; logiSum2 += c2;
+            });
+
+            document.getElementById('rptLogisticsDelayCnt').innerText = logiSum0.toLocaleString();
+            document.getElementById('rptLogisticsDelayRatio').innerText = calcRatio(logiSum0, logiSum1);
+
+            let delayPeisong0 = getReasonCnt(dataW0, "19 延遲配送");
+            let delayPeisong1 = getReasonCnt(dataW1, "19 延遲配送");
+            document.getElementById('rptTopDelayCnt').innerText = delayPeisong0.toLocaleString();
+            document.getElementById('rptTopDelayRatio').innerText = calcRatio(delayPeisong0, delayPeisong1);
+
+            let slaW0 = vol0 > 0 ? (((vol0 - logiSum0) / vol0) * 100).toFixed(1) + '%' : '0.0%';
+            document.getElementById('rptCurrentActualSla').innerText = slaW0;
+            document.getElementById('rptIsAchieved').innerText = parseFloat(slaW0) >= 100 ? '○' : '✕';
+
+            let whBody = document.getElementById('rptWhStackTableBody');
+            whBody.innerHTML = "";
+            const getWhReason = (whName, rKey) => dataW0.filter(r => r['[責任歸屬倉別]'] === whName && r['[延遲主因]'] === rKey).length;
+
+            let daxiSum = 0, daduSum = 0, okayamaSum = 0;
+            logisticsList.forEach(item => {
+                let dx = getWhReason('大溪倉', item.key);
+                let dd = getWhReason('大肚倉', item.key);
+                let ok = getWhReason('岡山倉', item.key);
+                daxiSum += dx; daduSum += dd; okayamaSum += ok;
+
+                let isHighlight = item.key === "19 延遲配送" ? 'border-2 border-red-500 font-bold bg-red-50' : '';
+                whBody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border font-semibold bg-slate-50">${item.name}</td>
+                        <td class="p-2 border ${isHighlight}">${dx}</td>
+                        <td class="p-2 border">${dd}</td>
+                        <td class="p-2 border">${ok}</td>
+                    </tr>
+                `;
+            });
+
+            whBody.innerHTML += `
+                <tr class="font-bold bg-slate-100">
+                    <td class="p-2 border">件數合計</td>
+                    <td class="p-2 border">${daxiSum}</td>
+                    <td class="p-2 border">${daduSum}</td>
+                    <td class="p-2 border">${okayamaSum}</td>
+                </tr>
+            `;
+
+            document.getElementById('rptPage2DelayCnt').innerText = delayPeisong0;
+            document.getElementById('rptPage2DaxiCnt').innerText = getWhReason('大溪倉', "19 延遲配送");
+        }
+
+        function doQueryFiltering() {
+            const sStart = document.getElementById('searchStartDate').value;
+            const sEnd = document.getElementById('searchEndDate').value;
+            const kw = document.getElementById('searchKeyword').value.trim().toUpperCase();
+            const uFilter = document.getElementById('searchUnitFilter').value;
+            const wFilter = document.getElementById('searchWhFilter').value;
+
+            queryFilteredData = GLOBAL_RECORDS.filter(r => {
+                if (sStart && r.日期 < sStart) return false;
+                if (sEnd && r.日期 > sEnd) return false;
+
+                let mKw = !kw || String(r.訂單編號 || "").toUpperCase().includes(kw) || 
+                                String(r.店號 || "").toUpperCase().includes(kw) || 
+                                String(r.寄件店名 || "").toUpperCase().includes(kw);
+                
+                let mUnit = true;
+                if (uFilter) {
+                    if (uFilter === "運務") {
+                        mUnit = (r['[責任歸屬單位]'] === "運務" || r['[責任歸屬單位]'] === "配送");
+                    } else {
+                        mUnit = (r['[責任歸屬單位]'] === uFilter);
+                    }
+                }
+                
+                let mWh = !wFilter || r['[責任歸屬倉別]'] === wFilter;
+
+                return mKw && mUnit && mWh;
+            });
+
+            queryFilteredData.sort((a, b) => {
+                let v1 = a[currentSortField] || "";
+                let v2 = b[currentSortField] || "";
+                if (v1 < v2) return currentSortAsc ? -1 : 1;
+                if (v1 > v2) return currentSortAsc ? 1 : -1;
+                return 0;
+            });
+
+            queryCurrentPage = 1;
+            renderQueryTableRows();
+        }
+
+        function handleTableSort(field) {
+            if (currentSortField === field) {
+                currentSortAsc = !currentSortAsc;
+            } else {
+                currentSortField = field;
+                currentSortAsc = true;
+            }
+            doQueryFiltering();
+        }
+
+        function changeQueryPage(dir) {
+            queryCurrentPage += dir;
+            renderQueryTableRows();
+        }
+
+        function jumpToTargetPage() {
+            const totalRows = queryFilteredData.length;
+            const maxPage = Math.ceil(totalRows / queryPageSize) || 1;
+            const inputEl = document.getElementById('jumpPageInput');
+            let targetPage = parseInt(inputEl.value);
+
+            if (isNaN(targetPage) || targetPage < 1) targetPage = 1;
+            if (targetPage > maxPage) targetPage = maxPage;
+
+            queryCurrentPage = targetPage;
+            renderQueryTableRows();
+        }
+
+        function renderQueryTableRows() {
+            const body = document.getElementById('queryTableBody');
+            body.innerHTML = "";
+
+            const totalRows = queryFilteredData.length;
+            const maxPage = Math.ceil(totalRows / queryPageSize) || 1;
+            
+            document.getElementById('tfootTotalRows').innerText = `${totalRows.toLocaleString()} 筆`;
+            document.getElementById('totalPagesLabel').innerText = `/ 共 ${maxPage} 頁`;
+            document.getElementById('jumpPageInput').value = queryCurrentPage;
+
+            if (totalRows === 0) {
+                body.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">查無符合篩選條件的物流紀錄。</td></tr>`;
+                document.getElementById('tablePaginationInfo').innerText = "顯示第 0 到 0 筆，共 0 筆";
+                document.getElementById('btnPrevPage').disabled = true;
+                document.getElementById('btnNextPage').disabled = true;
+                return;
+            }
+
+            const startIdx = (queryCurrentPage - 1) * queryPageSize;
+            const endIdx = Math.min(startIdx + queryPageSize, totalRows);
+            const pageData = queryFilteredData.slice(startIdx, endIdx);
+
+            document.getElementById('tablePaginationInfo').innerText = `顯示第 ${(startIdx + 1)} 到 ${endIdx} 筆，共 ${totalRows} 筆`;
+            document.getElementById('btnPrevPage').disabled = queryCurrentPage === 1;
+            document.getElementById('btnNextPage').disabled = queryCurrentPage >= maxPage;
+
+            pageData.forEach(r => {
+                const tr = document.createElement('tr');
+                let u = r['[責任歸屬單位]'];
+                if (u === '理貨') tr.className = "bg-morandi-lihuo-op font-medium text-slate-700";
+                else if (u === '配送' || u === '運務') tr.className = "bg-morandi-peisong-op font-medium text-slate-700";
+                else if (u === '驗收') tr.className = "bg-morandi-yanshou-op font-medium text-slate-700";
+                else tr.className = "hover:bg-slate-50";
+
+                let displayUnit = (u === "配送") ? "運務" : (u || "其他");
+
+                let currentReason = r['[延遲主因]'] || "正常";
+                let isFixed = Boolean(r['[人工修正原因]']);
+
+                let reasonDisplayHTML = isFixed 
+                    ? `<span class="text-red-600 font-bold">${currentReason} <span class="text-[13px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-normal">人工修正</span></span>`
+                    : `<span class="text-slate-700 font-medium">${currentReason}</span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3.5 border-b">${r.日期 || ""}</td>
+                    <td class="p-3.5 border-b text-slate-400 font-semibold">${r.星期 || ""}</td>
+                    <td class="p-3.5 border-b font-mono font-bold text-slate-800">${r.訂單編號 || ""}</td>
+                    <td class="p-3.5 border-b">${reasonDisplayHTML}</td>
+                    <td class="p-3.5 border-b font-semibold text-slate-700">${r['[責任歸屬倉別]'] || ""}</td> 
+                    <td class="p-3.5 border-b"><span class="px-2.5 py-1 rounded text-[13px] font-extrabold bg-slate-200 text-slate-800">${displayUnit}</span></td> 
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function exportQueryToExcel() {
+            if (queryFilteredData.length === 0) { alert("目前查無資料可供匯出。"); return; }
+            
+            const exportDataset = queryFilteredData.map(r => ({
+                "日期": r.日期 || "",
+                "星期": r.星期 || "",
+                "訂單編號": r.訂單編號 || "",
+                "[延遲主因]": r['[延遲主因]'] || "",
+                "[責任歸屬倉別]": r['[責任歸屬倉別]'] || "",
+                "[責任歸屬單位]": (r['[責任歸屬單位]'] === "配送") ? "運務" : (r['[責任歸屬單位]'] || "其他")
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportDataset);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "物流異常分析篩選明細");
+            XLSX.writeFile(workbook, `物流績效分析篩選匯出_${formatDateStr(new Date())}.xlsx`);
+        }
+
+        function toggleMobileMenu() {
+            const nav = document.getElementById('sidebarNav');
+            nav.classList.toggle('hidden');
+        }
+
+        function clearSystemDatabase() {
+            if (!confirm("⚠️ 您確定要徹底清空本地快取資料庫嗎？此動作不可逆！")) return;
+            let tx = dbInstance.transaction(["records", "config"], "readwrite");
+            tx.objectStore("records").clear();
+            tx.objectStore("config").clear();
+            tx.oncomplete = function() {
+                alert("🗑️ 本地快取資料庫已成功清空！系統即將重新載入。");
+                location.reload();
+            };
+        }
+
+        function copyCombinedJsonToClipboard() {
+            const payload = { records: GLOBAL_RECORDS, volumes: GLOBAL_VOLUMES, special_stores: SPECIAL_STORES_LIST, users: DYNAMIC_USERS };
+            navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
+                alert("📋 複製成功！最新聯合計量庫已寫入剪貼簿。");
+            });
+        }
+
+        async function saveAndConnectGist() {
+            const url = document.getElementById('gistUrlInput').value.trim();
+            if (!url) { alert("請貼上 GitHub Gist 的 Raw 網址"); return; }
+            await connectToGist(url, false);
+        }
+
+        async function connectToGist(url, isAuto = false) {
+            try {
+                const res = await fetch(url);
+                const cloudData = await res.json();
+                
+                if (cloudData && cloudData.records) {
+                    GLOBAL_RECORDS = cloudData.records;
+                    GLOBAL_VOLUMES = cloudData.volumes || {};
+                    SPECIAL_STORES_LIST = cloudData.special_stores || [];
+                    if (cloudData.users) DYNAMIC_USERS = cloudData.users;
+                    
+                    localStorage.setItem('logistics_gist_url', url);
+                    persistMemoryToDB();
+
+                    updateSyncStatusUI(true);
+
+                    if (!isAuto) alert("🎉 遠端雲端歷史總庫讀取同步成功！");
+                    renderDashboard();
+                } else {
+                    throw new Error("格式錯誤：此 Gist 內容不符合戰情室 JSON 結構");
+                }
+            } catch (err) {
+                updateSyncStatusUI(false);
+                if (!isAuto) alert("連線失敗：" + err.message);
+            }
+        }
+
+        function updateSyncStatusUI(isConnected) {
+            const indicator = document.getElementById('syncStatusIndicator');
+            if (!indicator) return;
+
+            if (isConnected) {
+                indicator.className = "text-[15px] bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-1.5 rounded-full font-medium flex items-center gap-2";
+                indicator.innerHTML = `<i data-lucide="cloud" class="w-4 h-4 text-emerald-600"></i> 雲端中轉已連線同步`;
+            } else {
+                indicator.className = "text-[15px] bg-amber-50 border border-amber-200 text-amber-700 px-4 py-1.5 rounded-full font-medium flex items-center gap-2";
+                indicator.innerHTML = `<i data-lucide="cloud-off" class="w-4 h-4 animate-bounce"></i> 雲端中轉未連線，目前使用本地快取`;
+            }
+            lucide.createIcons();
+        }
+
+        function handleExcelUpload(event, section) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: '' });
+                
+                if (section === 'A') processSectionARawData(jsonData);
+                if (section === 'B') processSectionBManualFix(jsonData);
+                if (section === 'C') processSectionCSpecialStores(jsonData);
+                if (section === 'D') processSectionDHorizontalVolumes(worksheet); 
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function downloadBlankTemplate(type) {
+            let headers = [], filename = "", dummyData = [];
+            if (type === 'A') {
+                filename = "第一區_原始物流大表_標準範本.xlsx";
+                headers = ["日期", "星期", "類別", "訂單編號", "寄件日", "寄件時間", "離店日", "離店時間", "離店帳號", "離店倉別", "驗收日", "驗收時間", "驗收倉", "理貨設備讀取日期", "理貨設備讀取時間", "理貨PDA裝箱日期", "理貨PDA裝箱時間", "理貨疊板日期", "理貨疊板時間", "出貨倉", "出貨配別", "運務士疊板日期", "運務士疊板時間", "運務士卸貨日期", "運務士卸貨時間", "到店日", "到店驗收時間", "最終貨態", "寄件通路", "寄件店號", "寄件店名", "取件通路", "取件店號", "取件店名", "商品價值", "備註", "上收件", "異常點交日期", "異常點交原因", "店舖壓缺時間", "寄件店回收路線", "取件店配送路線", "寄件店行政區", "配送店行政區"];
+                dummyData = [{"訂單編號": "EC202600001", "寄件日": "20260622", "寄件時間": "232027", "離店日": "20260622", "離店時間": "232027", "離店帳號": "MING_CHANG-API", "驗收日": "20260624", "驗收時間": "015545", "驗收倉": "01 大溪倉", "出貨倉": "06 大肚倉", "寄件店號": "024878", "寄件店名": "大園環西門市", "寄件店行政區": "桃園市大園區"}];
+            } else if (type === 'B') {
+                filename = "第二區_人工原因修正名冊_標準範本.xlsx";
+                headers = ["日期", "星期", "類別", "訂單編號", "寄件日", "寄件時間", "離店日", "離店時間", "離店帳號", "離店倉別", "驗收日", "驗收時間", "驗收倉", "理貨設備讀取日期", "理貨設備讀取時間", "理貨PDA裝箱日期", "理貨PDA裝箱時間", "理貨疊板日期", "理貨疊板時間", "出貨倉", "出貨配別", "運務士疊板日期", "運務士疊板時間", "運務士卸貨日期", "運務士卸貨時間", "到店日", "到店驗收時間", "最終貨態", "寄件通路", "寄件店號", "寄件店名", "取件通路", "取件店號", "取件店名", "商品價值", "備註", "上收件", "異常點交日期", "異常點交原因", "店舖壓缺時間", "寄件店回收路線", "取件店配送路線", "寄件店行政區", "配送店行政區", "延遲原因", "責任歸屬倉別", "責任歸屬單位"];
+                dummyData = [{"訂單編號": "EC202600001", "延遲原因": "天候因素船班停航", "責任歸屬倉別": "其他", "責任歸屬單位": "運務"}];
+            } else if (type === 'C') {
+                filename = "離島及特殊店Lookup名冊_標準範本.xlsx";
+                headers = ["店號", "店名", "路線路順", "備註"]; 
+                dummyData = [{"店號": "025101", "店名": "南港生技店", "路線路順": "1A01", "備註": "廠區、學區、車站店"}];
+            } else if (type === 'D') {
+                filename = "第四區_每日寄件數大表_標準範本.xlsx";
+                headers = ["日期", "2026-06-01", "2026-06-02", "2026-06-03"];
+                dummyData = [
+                    {"日期": "寄件數", "2026-06-01": "45000", "2026-06-02": "48000", "2026-06-03": "51000"}
+                ];
+            }
+            const ws = XLSX.utils.json_to_sheet(dummyData, { header: headers });
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "下載範本");
+            XLSX.writeFile(wb, filename);
+        }
+    </script>
+</body>
+</html>
