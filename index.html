@@ -165,9 +165,6 @@
                     <i data-lucide="database" class="w-4 h-4"></i> 後台資料管理
                 </button>
             </nav>
-            <div class="p-3 border-t border-slate-700 text-center text-slate-400">
-                AI落地實戰專案 成果繳交版
-            </div>
         </aside>
 
         <!-- 主內容顯示區 -->
@@ -192,7 +189,7 @@
                         <i data-lucide="calendar" class="w-5 h-5 text-slate-500"></i>
                         <span class="text-[16px] font-semibold text-slate-700">選擇日期區間：</span>
                     </div>
-                    <input type="date" id="filterStartDate" onchange="renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                    <input type="date" id="filterStartDate" onchange="syncEndDateToStart('filterStartDate','filterEndDate'); renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
                     <span class="text-slate-400 text-[15px]">至</span>
                     <input type="date" id="filterEndDate" onchange="renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
                     <button onclick="resetDashboardDates()" class="ml-auto text-[15px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold transition">重設範圍</button>
@@ -243,7 +240,7 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-5 flex flex-col min-h-[380px]">
-                        <h4 class="text-[16px] font-bold text-slate-700 border-b pb-2.5 mb-4 flex items-center gap-2"><i data-lucide="pie-chart" class="w-5 h-5"></i> 責任單位異常佔比分析</h4>
+                        <h4 class="text-[16px] font-bold text-slate-700 border-b pb-2.5 mb-4 flex items-center gap-2"><i data-lucide="pie-chart" class="w-5 h-5"></i> 三倉異常佔比分析</h4>
                         <div class="flex-1 relative flex items-center justify-center"><canvas id="chartUnit"></canvas></div>
                     </div>
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-7 flex flex-col min-h-[400px]">
@@ -269,7 +266,7 @@
                     <div class="sm:col-span-2 flex items-center gap-2">
                         <div class="flex-1">
                             <label class="block font-bold text-slate-600 mb-1.5">查詢開始日期</label>
-                            <input type="date" id="searchStartDate" onchange="doQueryFiltering()" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <input type="date" id="searchStartDate" onchange="syncEndDateToStart('searchStartDate','searchEndDate'); doQueryFiltering()" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
                         <span class="text-slate-400 mt-6">至</span>
                         <div class="flex-1">
@@ -319,7 +316,6 @@
                             <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 z-10 shadow-sm">
                                 <tr>
                                     <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('日期')">日期 ⇅</th>
-                                    <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('星期')">星期 ⇅</th>
                                     <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('訂單編號')">訂單編號 ⇅</th>
                                     <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('[延遲主因]')">[延遲主因] ⇅</th>
                                     <th class="p-3.5 border-b cursor-pointer" onclick="handleTableSort('[責任歸屬倉別]')">[責任歸屬倉別] ⇅</th>
@@ -376,7 +372,7 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <button onclick="changeCalendarMonth(-1)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition font-bold flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> 上個月</button>
-                            <span id="calendarMonthLabel" class="text-[17px] font-extrabold text-slate-800 px-4 min-w-[140px] text-center">2026 年 06 月</span>
+                            <span id="calendarMonthLabel" class="text-[17px] font-extrabold text-slate-800 px-4 min-w-[140px] text-center">2026 年 07 月</span>
                             <button onclick="changeCalendarMonth(1)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition font-bold flex items-center gap-1">下個月 <i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                         </div>
                     </div>
@@ -482,10 +478,13 @@
                     <div class="flex items-center gap-4">
                         <div class="flex items-center gap-2">
                             <span class="text-[15px] font-semibold text-slate-600">選擇本週區間：</span>
-                            <input type="date" id="reportWeekStart" onchange="renderWeeklyReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
+                            <input type="date" id="reportWeekStart" onchange="syncEndDateOneWeek('reportWeekStart','reportWeekEnd'); renderWeeklyReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
                             <span class="text-[15px] text-slate-400">至</span>
                             <input type="date" id="reportWeekEnd" onchange="renderWeeklyReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
                         </div>
+                        <button onclick="exportWeeklyReportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
+                            <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> 匯出簡報 Excel
+                        </button>
                         <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
                             <i data-lucide="printer" class="w-5 h-5"></i> 列印 / 匯出簡報 PDF
                         </button>
@@ -499,7 +498,7 @@
                         <span class="text-[15px] font-semibold text-slate-600" id="rptDateRangeLbl1">統計區間：出貨日 --/--~--/--</span>
                     </div>
 
-                    <p class="text-[15px] font-bold mb-3 flex items-center gap-1">■ 服務EC履約時效(C2C+B2C)【6月KPI目標100%】</p>
+                    <p class="text-[15px] font-bold mb-3 flex items-center gap-1">■ 服務EC履約時效(C2C+B2C)【7月KPI目標100%】</p>
 
                     <table class="w-full text-center border-collapse text-[15px] mb-5 border border-slate-300">
                         <thead class="bg-slate-700 text-white font-semibold">
@@ -669,7 +668,7 @@
                     <div class="flex flex-col sm:flex-row gap-4 items-end">
                         <div class="flex-1">
                             <label class="block text-[15px] font-bold text-slate-600 mb-1.5">雲端資料庫網址連結 (GitHub Raw URL)</label>
-                            <input type="text" id="gistUrlInput" placeholder="請貼上 GitHub 原始 Raw 網址" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <input type="text" id="gistUrlInput" placeholder="請貼上 GitHub Raw 網址" class="w-full border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
                         <button onclick="saveAndConnectGist()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow transition flex items-center gap-2 shrink-0">
                             <i data-lucide="link" class="w-5 h-5"></i> 連線並讀取雲端歷史庫
@@ -744,7 +743,7 @@
                         <h4 class="font-bold text-[16px] flex items-center gap-2 text-emerald-400">
                             <i data-lucide="save" class="w-5 h-5"></i> 雲端同步完成點：一鍵複製組合歷史總庫
                         </h4>
-                        <p class="text-[15px] text-slate-400 mt-1">本地快取運算完畢後，點擊右方按鈕複製文字，貼回 GitHub 中保存即可做為遠端資料庫。</p>
+                        <p class="text-[15px] text-slate-400 mt-1">本地快取運算完畢後，點擊右方按鈕複製文字，貼回 GitHub 保存即可做為遠端資料庫。</p>
                     </div>
                     <button onclick="copyCombinedJsonToClipboard()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl text-[15px] shadow-lg transition flex items-center gap-2 shrink-0">
                         <i data-lucide="clipboard-copy" class="w-5 h-5"></i> 複製最新完整歷史資料
@@ -758,6 +757,9 @@
     <!-- 3. 核心運算 JavaScript 實作區               -->
     <!-- ========================================== -->
     <script>
+        // 🌟 設定預設的 GitHub Raw URL
+        const DEFAULT_GIST_URL = "https://raw.githubusercontent.com/您的帳號/logistics-db/main/data.json";
+
         let DYNAMIC_USERS = {
             admin: { u: "admin", p: "admin2026", role: "admin", roleName: "最高管理者" },
             viewer: { u: "viewer", p: "password123", role: "viewer", roleName: "一般檢視者" }
@@ -768,8 +770,9 @@
         let currentUserRole = null;
 
         let GLOBAL_RECORDS = [];
-        let GLOBAL_VOLUMES = {}; 
+        let GLOBAL_VOLUMES = {};
         let SPECIAL_STORES_LIST = [];
+        let LAST_WEEKLY_REPORT = null;
 
         let currentTabIdx = 0;
         let queryFilteredData = [];
@@ -779,7 +782,7 @@
         let currentSortAsc = false;
 
         let calCurrentYear = 2026;
-        let calCurrentMonth = 5; 
+        let calCurrentMonth = 6; // 0-indexed: 6 代表 7 月
 
         let chartInstances = { unit: null, whStack: null, reasons: null, trend: null }; 
         let dbInstance = null;
@@ -792,40 +795,25 @@
             checkLockoutStatus();
             setDefaultFilterDates();
 
-            // 1. 強制指定預設 GitHub Raw 網址
-            const defaultUrl = "https://raw.githubusercontent.com/sakuraiba1349/logistics-db/main/data.json";
+            const savedGistUrl = localStorage.getItem('logistics_gist_url') || DEFAULT_GIST_URL;
             
-            // 2. 優先讀取暫存，若無痕模式讀不到則強制使用 defaultUrl
-            let savedGistUrl = defaultUrl;
-            try {
-                savedGistUrl = localStorage.getItem('logistics_gist_url') || defaultUrl;
-            } catch (e) {
-                savedGistUrl = defaultUrl;
-            }
-
-            // 3. 強制填入輸入框，確保畫面不留白
             const urlInput = document.getElementById('gistUrlInput');
-            if (urlInput) {
-                urlInput.value = savedGistUrl;
-            }
-            
-            // 4. 強制啟動雲端連線
+            if (urlInput) urlInput.value = savedGistUrl;
+
             connectToGist(savedGistUrl, true);
         });
 
         function checkLockoutStatus() {
-            try {
-                const lockTime = localStorage.getItem('logistics_lock_ts');
-                if (lockTime) {
-                    const diff = Date.now() - parseInt(lockTime);
-                    if (diff < 15 * 60 * 1000) {
-                        const remaining = Math.ceil((15 * 60 * 1000 - diff) / 60000);
-                        setLoginLockoutState(remaining);
-                    } else {
-                        localStorage.removeItem('logistics_lock_ts');
-                    }
+            const lockTime = localStorage.getItem('logistics_lock_ts');
+            if (lockTime) {
+                const diff = Date.now() - parseInt(lockTime);
+                if (diff < 15 * 60 * 1000) {
+                    const remaining = Math.ceil((15 * 60 * 1000 - diff) / 60000);
+                    setLoginLockoutState(remaining);
+                } else {
+                    localStorage.removeItem('logistics_lock_ts');
                 }
-            } catch (e) {}
+            }
         }
 
         function setLoginLockoutState(mins) {
@@ -842,12 +830,10 @@
             const pInput = document.getElementById('passwordInput').value.trim();
             const alertBox = document.getElementById('loginAlert');
 
-            try {
-                if (localStorage.getItem('logistics_lock_ts')) {
-                    checkLockoutStatus();
-                    return;
-                }
-            } catch (e) {}
+            if (localStorage.getItem('logistics_lock_ts')) {
+                checkLockoutStatus();
+                return;
+            }
 
             let foundUser = DYNAMIC_USERS[uInput];
             if (foundUser && foundUser.p === pInput) {
@@ -856,7 +842,7 @@
                 loginFailCount++;
                 alertBox.classList.remove('hidden');
                 if (loginFailCount >= ABS_MAX_FAIL) {
-                    try { localStorage.setItem('logistics_lock_ts', Date.now().toString()); } catch (e) {}
+                    localStorage.setItem('logistics_lock_ts', Date.now().toString());
                     setLoginLockoutState(15);
                 } else {
                     alertBox.innerText = `❌ 帳號或密碼錯誤！(剩餘嘗試機會：${ABS_MAX_FAIL - loginFailCount} 次)`;
@@ -932,19 +918,47 @@
             if (idx === 5) renderWeeklyReport();
         }
 
+        function syncEndDateToStart(startId, endId) {
+            const startVal = document.getElementById(startId).value;
+            if (startVal) {
+                document.getElementById(endId).value = startVal;
+            }
+        }
+
+        function syncEndDateOneWeek(startId, endId) {
+            const startVal = document.getElementById(startId).value;
+            if (startVal) {
+                let end = new Date(startVal);
+                end.setDate(end.getDate() + 6);
+                document.getElementById(endId).value = formatDateStr(end);
+            }
+        }
+
         function setDefaultFilterDates() {
-            document.getElementById('filterStartDate').value = "2026-06-01";
-            document.getElementById('filterEndDate').value = "2026-06-30";
-            document.getElementById('searchStartDate').value = "2026-06-01";
-            document.getElementById('searchEndDate').value = "2026-06-30";
+            document.getElementById('filterStartDate').value = "2026-07-01";
+            document.getElementById('filterEndDate').value = "2026-07-31";
+            document.getElementById('searchStartDate').value = "2026-07-01";
+            document.getElementById('searchEndDate').value = "2026-07-31";
             
-            document.getElementById('reportWeekStart').value = "2026-06-22";
-            document.getElementById('reportWeekEnd').value = "2026-06-28";
+            document.getElementById('reportWeekStart').value = "2026-07-06";
+            document.getElementById('reportWeekEnd').value = "2026-07-12";
         }
 
         function resetDashboardDates() {
             setDefaultFilterDates();
             renderDashboard();
+        }
+
+        function formatDateShortMD(ymd) {
+            if (!ymd) return "";
+            const parts = String(ymd).split('-');
+            if (parts.length !== 3) return ymd;
+            return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`;
+        }
+
+        function formatWeekdayShort(weekdayFull) {
+            if (!weekdayFull) return "";
+            return String(weekdayFull).replace('星期', '');
         }
 
         function formatDateStr(dateObj) {
@@ -955,21 +969,19 @@
         }
 
         function initIndexedDB() {
-            try {
-                const request = indexedDB.open("LogisticsDB", 1);
-                request.onupgradeneeded = function(e) {
-                    let db = e.target.result;
-                    if (!db.objectStoreNames.contains("records")) {
-                        db.createObjectStore("records", { keyPath: "訂單編號" });
-                    }
-                    if (!db.objectStoreNames.contains("config")) {
-                        db.createObjectStore("config", { keyPath: "key" });
-                    }
-                };
-                request.onsuccess = function(e) {
-                    dbInstance = e.target.result;
-                };
-            } catch (e) {}
+            const request = indexedDB.open("LogisticsDB", 1);
+            request.onupgradeneeded = function(e) {
+                let db = e.target.result;
+                if (!db.objectStoreNames.contains("records")) {
+                    db.createObjectStore("records", { keyPath: "訂單編號" });
+                }
+                if (!db.objectStoreNames.contains("config")) {
+                    db.createObjectStore("config", { keyPath: "key" });
+                }
+            };
+            request.onsuccess = function(e) {
+                dbInstance = e.target.result;
+            };
         }
 
         function loadLocalDataToMemory() {
@@ -977,54 +989,46 @@
                 setTimeout(loadLocalDataToMemory, 200);
                 return;
             }
-            try {
-                let tx = dbInstance.transaction(["records", "config"], "readonly");
-                let recStore = tx.objectStore("records");
-                let cfgStore = tx.objectStore("config");
+            let tx = dbInstance.transaction(["records", "config"], "readonly");
+            let recStore = tx.objectStore("records");
+            let cfgStore = tx.objectStore("config");
 
-                let getAllRecs = recStore.getAll();
-                getAllRecs.onsuccess = function() {
-                    if (getAllRecs.result && getAllRecs.result.length > 0) {
-                        GLOBAL_RECORDS = getAllRecs.result;
-                    }
-                    
-                    let getVol = cfgStore.get("volumes");
-                    getVol.onsuccess = function() {
-                        if (getVol.result && Object.keys(getVol.result.value || {}).length > 0) {
-                            GLOBAL_VOLUMES = getVol.result.value;
-                        }
-                        
-                        let getSpec = cfgStore.get("special_stores");
-                        if (getSpec.result && (getSpec.result.value || []).length > 0) {
-                            SPECIAL_STORES_LIST = getSpec.result.value;
-                        }
+            let getAllRecs = recStore.getAll();
+            getAllRecs.onsuccess = function() {
+                GLOBAL_RECORDS = getAllRecs.result || [];
+                
+                let getVol = cfgStore.get("volumes");
+                getVol.onsuccess = function() {
+                    if (getVol.result) GLOBAL_VOLUMES = getVol.result.value || {};
+
+                    let getSpec = cfgStore.get("special_stores");
+                    getSpec.onsuccess = function() {
+                        if (getSpec.result) SPECIAL_STORES_LIST = getSpec.result.value || [];
 
                         let getUsers = cfgStore.get("users");
-                        if (getUsers.result && getUsers.result.value) {
-                            DYNAMIC_USERS = getUsers.result.value;
-                        }
-                        
-                        renderDashboard();
+                        getUsers.onsuccess = function() {
+                            if (getUsers.result && getUsers.result.value) {
+                                DYNAMIC_USERS = getUsers.result.value;
+                            }
+
+                            renderDashboard();
+                        };
                     };
                 };
-            } catch (e) {
-                renderDashboard();
-            }
+            };
         }
 
         function persistMemoryToDB() {
             if (!dbInstance) return;
-            try {
-                let tx = dbInstance.transaction(["records", "config"], "readwrite");
-                let recStore = tx.objectStore("records");
-                let cfgStore = tx.objectStore("config");
+            let tx = dbInstance.transaction(["records", "config"], "readwrite");
+            let recStore = tx.objectStore("records");
+            let cfgStore = tx.objectStore("config");
 
-                recStore.clear();
-                GLOBAL_RECORDS.forEach(r => recStore.put(r));
-                cfgStore.put({ key: "volumes", value: GLOBAL_VOLUMES });
-                cfgStore.put({ key: "special_stores", value: SPECIAL_STORES_LIST });
-                cfgStore.put({ key: "users", value: DYNAMIC_USERS });
-            } catch (e) {}
+            recStore.clear();
+            GLOBAL_RECORDS.forEach(r => recStore.put(r));
+            cfgStore.put({ key: "volumes", value: GLOBAL_VOLUMES });
+            cfgStore.put({ key: "special_stores", value: SPECIAL_STORES_LIST });
+            cfgStore.put({ key: "users", value: DYNAMIC_USERS });
         }
 
         function renderAccountTable() {
@@ -1178,35 +1182,59 @@
             return "其他"; 
         }
 
+        // 🌟 強化版 Excel 時間解析
         function parseExcelDate(val) {
             if (!val || String(val).trim() === "") return null;
-            let s = String(val).trim().replace(/\//g, '-');
+            let s = String(val).replace(/\.0/g, '').trim().replace(/\//g, '-');
             
+            let parts = s.split(/\s+/);
+            if (parts.length === 2 && /^\d{8}$/.test(parts[0])) {
+                let dStr = parts[0];
+                let tStr = parts[1].padStart(6, '0');
+                
+                let y = parseInt(dStr.substring(0, 4));
+                let m = parseInt(dStr.substring(4, 6)) - 1;
+                let d = parseInt(dStr.substring(6, 8));
+                
+                let hh = parseInt(tStr.substring(0, 2));
+                let mm = parseInt(tStr.substring(2, 4));
+                let ss = parseInt(tStr.substring(4, 6));
+                
+                let dt = new Date(y, m, d, hh, mm, ss);
+                return isNaN(dt.getTime()) ? null : dt;
+            }
+
             if (/^\d{8}$/.test(s)) {
                 let y = parseInt(s.substring(0, 4));
                 let m = parseInt(s.substring(4, 6)) - 1;
                 let d = parseInt(s.substring(6, 8));
-                let date = new Date(y, m, d);
-                return isNaN(date.getTime()) ? null : date;
+                let dt = new Date(y, m, d);
+                return isNaN(dt.getTime()) ? null : dt;
             }
 
             if (/^\d+(\.\d+)?$/.test(s)) {
                 let num = parseFloat(s);
                 let date = new Date((num - 25569) * 86400 * 1000);
-                if (!isNaN(date.getTime()) && date.getFullYear() === 2001) {
+                if (isNaN(date.getTime())) return null;
+
+                let yr = date.getFullYear();
+                if (yr === 2001) {
                     date.setFullYear(2026);
+                } else if (yr < 1990 || yr > 2100) {
+                    // 純數字但換算出不合理年份，通常是像 HHMMSS 這種「只有時間、沒有日期」的欄位被誤判為 Excel 序列日期，視為無法解析
+                    return null;
                 }
-                return isNaN(date.getTime()) ? null : date;
+                return date;
             }
             
-            let matchYMD = s.match(/^(\d+)[-/](\d+)[-/](\d+)/);
-            if (matchYMD) {
-                let y = parseInt(matchYMD[1]);
-                let m = parseInt(matchYMD[2]) - 1;
-                let d = parseInt(matchYMD[3]);
-                if (y < 1911) y += 1911; 
-                let date = new Date(y, m, d);
-                return isNaN(date.getTime()) ? null : date;
+            // 民國年格式，例如 115-01-01（原始為 115/01/01）
+            let rocMatch = s.match(/^(\d{2,3})-(\d{1,2})-(\d{1,2})$/);
+            if (rocMatch) {
+                let y = parseInt(rocMatch[1]) + 1911;
+                let m = parseInt(rocMatch[2]) - 1;
+                let d = parseInt(rocMatch[3]);
+                let dt = new Date(y, m, d);
+                return isNaN(dt.getTime()) ? null : dt;
             }
 
             let parsed = new Date(s);
@@ -1231,18 +1259,47 @@
             return SPECIAL_STORES_LIST.some(item => {
                 let sId = String(item.id || "").toUpperCase();
                 let sName = String(item.name || "").toUpperCase();
-                return (sId && (storeNo === sId || sendStoreName.includes(sId) || getStoreName.includes(sId))) ||
-                       (sName && (sendStoreName.includes(sName) || getStoreName.includes(sName)));
+                return (sId && storeNo === sId) ||
+                       (sName && (sendStoreName === sName || getStoreName === sName));
             });
         }
 
+        function deriveRespUnitAndWh(main_reason, row) {
+            let resp_unit = "其他";
+            if (main_reason.includes("11 延遲驗收")) {
+                resp_unit = "驗收";
+            } else if (["14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)", "16 PDA漏刷進店"].some(x => main_reason.includes(x))) {
+                resp_unit = "理貨";
+            } else if (["18 延遲返廠", "19 延遲配送"].some(x => main_reason.includes(x))) {
+                resp_unit = "運務";
+            }
+
+            let resp_wh = "其他";
+            let v_wh = cleanWarehouseName(row['驗收倉']);
+            let o_wh = cleanWarehouseName(row['出貨倉']);
+            let l_wh = cleanWarehouseName(row['離店倉別'] || row['離店倉']);
+
+            if (main_reason.includes("11 延遲驗收")) {
+                resp_wh = v_wh;
+            } else if (["14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)", "16 PDA漏刷進店", "19 延遲配送"].some(x => main_reason.includes(x))) {
+                resp_wh = o_wh;
+            } else if (main_reason.includes("18 延遲返廠")) {
+                resp_wh = l_wh;
+            } else if (["02 店舖修正", "07 店舖晚交寄(蘆竹)", "08 店舖晚交寄"].some(x => main_reason.includes(x))) {
+                resp_wh = "店舖";
+            }
+
+            return { unit: resp_unit, wh: resp_wh };
+        }
+
         function run12RulesLogisticsEngine(row) {
-            let ref_time = new Date("2026-06-30T23:59:59").getTime(); 
+            // 🌟 核心修正點：將 ref_time 設定為當前系統動態時間 Date.now()，解決月份跨月與時間差計算為負數問題
+            let ref_time = Date.now(); 
 
             const combineDateTime = (dCol, tCol) => {
                 let d = String(row[dCol] || "").trim();
                 let t = String(row[tCol] || "").trim();
-                if (d && t) return `${d} ${t}`;
+                if (d && t && d !== 'nan' && t !== 'nan') return `${d} ${t}`;
                 return row[tCol] || row[dCol] || "";
             };
 
@@ -1272,7 +1329,7 @@
 
             let main_reason = "正常";
 
-            if (val_err_reason !== "" && !val_err_reason.includes("分類錯誤")) {
+            if (val_err_reason !== "" && val_err_reason !== "nan" && !val_err_reason.includes("分類錯誤")) {
                 main_reason = "01 異常點交";
             }
             else if (t_shop_fix !== null) {
@@ -1303,8 +1360,8 @@
             else if (
                 (t_box && t_arrive && hrs_diff(t_arrive, t_box) > 24) ||
                 (t_unloading && t_arrive && hrs_diff(t_arrive, t_unloading) > 12) ||
-                (t_unloading && !t_arrive && hrs_diff(new Date(ref_time), t_unloading) > 12) ||
-                (t_plate && !t_arrive && !t_unloading && hrs_diff(new Date(ref_time), t_plate) > 18) ||
+                (t_unloading && !t_arrive && ((ref_time - t_unloading.getTime()) / 3600000) > 12) ||
+                (t_plate && !t_arrive && !t_unloading && ((ref_time - t_plate.getTime()) / 3600000) > 18) ||
                 (t_box && !t_plate && !t_unloading && !t_arrive)
             ) {
                 main_reason = "19 延遲配送";
@@ -1345,12 +1402,14 @@
             }
             else if (
                 (t_check && t_box && (() => {
+                    let checkDay = new Date(t_check.getFullYear(), t_check.getMonth(), t_check.getDate());
+                    let boxDay = new Date(t_box.getFullYear(), t_box.getMonth(), t_box.getDate());
                     if (t_check.getHours() < 12) {
-                        return t_box.getDate() > t_check.getDate();
+                        return boxDay > checkDay;
                     } else {
-                        let nextDay = new Date(t_check);
+                        let nextDay = new Date(checkDay);
                         nextDay.setDate(nextDay.getDate() + 1);
-                        return t_box.getDate() > nextDay.getDate();
+                        return boxDay > nextDay;
                     }
                 })()) ||
                 (t_read && !t_box && !t_arrive)
@@ -1360,29 +1419,7 @@
                 main_reason = (v_wh !== o_wh) ? "14 延遲裝箱(跨倉)" : "15 延遲裝箱(當倉)";
             }
 
-            let resp_unit = "其他";
-            if (main_reason.includes("11 延遲驗收")) {
-                resp_unit = "驗收";
-            } else if (["14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)", "16 PDA漏刷進店"].some(x => main_reason.includes(x))) {
-                resp_unit = "理貨";
-            } else if (["18 延遲返廠", "19 延遲配送"].some(x => main_reason.includes(x))) {
-                resp_unit = "運務"; 
-            }
-
-            let resp_wh = "其他";
-            let v_wh = cleanWarehouseName(row['驗收倉']);
-            let o_wh = cleanWarehouseName(row['出貨倉']);
-            let l_wh = cleanWarehouseName(row['離店倉別'] || row['離店倉']);
-
-            if (main_reason.includes("11 延遲驗收")) {
-                resp_wh = v_wh;
-            } else if (["14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)", "16 PDA漏刷進店", "19 延遲配送"].some(x => main_reason.includes(x))) {
-                resp_wh = o_wh;
-            } else if (main_reason.includes("18 延遲返廠")) {
-                resp_wh = l_wh;
-            } else if (["02 店舖修正", "07 店舖晚交寄(蘆竹)", "08 店舖晚交寄"].some(x => main_reason.includes(x))) {
-                resp_wh = "店舖";
-            }
+            let { unit: resp_unit, wh: resp_wh } = deriveRespUnitAndWh(main_reason, row);
 
             row['[延遲主因]'] = main_reason;
             row['[責任歸屬倉別]'] = resp_wh;
@@ -1395,14 +1432,22 @@
             const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
 
             rows.forEach(rawRow => {
-                let orderId = String(rawRow['訂單編號'] || rawRow['單號'] || "").trim();
-                if (!orderId) return;
+                let firstColKey = Object.keys(rawRow)[0];
+                let firstColIsDate = firstColKey && firstColKey.indexOf('日期') !== -1;
+
+                let rawOrder = String(rawRow['訂單編號'] || rawRow['單號'] || "").trim().replace(/\.0/g, '');
+                if (!rawOrder) return;
+
+                let orderId = rawOrder.padStart(11, '0');
 
                 rawRow['訂單編號'] = orderId;
                 rawRow['店號'] = String(rawRow['寄件店號'] || rawRow['店號'] || "").trim();
                 rawRow['倉別'] = cleanWarehouseName(rawRow['出貨倉'] || rawRow['倉別']);
 
-                let dObj = parseExcelDate(rawRow['寄件日'] || rawRow['日期'] || rawRow['寄件時間']);
+                let dObj = firstColIsDate ? parseExcelDate(rawRow[firstColKey]) : null;
+                if (!dObj) {
+                    dObj = parseExcelDate(rawRow['寄件日'] || rawRow['日期'] || rawRow['寄件時間']);
+                }
                 if (dObj) {
                     rawRow['日期'] = formatDateToYMD(dObj);
                     rawRow['星期'] = weekNames[dObj.getDay()];
@@ -1412,6 +1457,8 @@
 
                 let analyzed = run12RulesLogisticsEngine(rawRow);
                 analyzed['[原始自動判定原因]'] = analyzed['[延遲主因]'];
+                analyzed['[原始責任歸屬倉別]'] = analyzed['[責任歸屬倉別]'];
+                analyzed['[原始責任歸屬單位]'] = analyzed['[責任歸屬單位]'];
 
                 let idx = GLOBAL_RECORDS.findIndex(x => x.訂單編號 === orderId);
                 if (idx > -1) {
@@ -1430,8 +1477,9 @@
         function processSectionBManualFix(rows) {
             let fixCount = 0;
             rows.forEach(fixRow => {
-                let orderId = String(fixRow['訂單編號'] || fixRow['單號'] || "").trim();
-                if (!orderId) return;
+                let rawOrder = String(fixRow['訂單編號'] || fixRow['單號'] || "").trim().replace(/\.0/g, '');
+                if (!rawOrder) return;
+                let orderId = rawOrder.padStart(11, '0');
 
                 let idx = GLOBAL_RECORDS.findIndex(x => x.訂單編號 === orderId);
                 if (idx > -1) {
@@ -1443,11 +1491,24 @@
                         if (!GLOBAL_RECORDS[idx]['[原始自動判定原因]']) {
                             GLOBAL_RECORDS[idx]['[原始自動判定原因]'] = GLOBAL_RECORDS[idx]['[延遲主因]'];
                         }
+                        if (!GLOBAL_RECORDS[idx]['[原始責任歸屬倉別]']) {
+                            GLOBAL_RECORDS[idx]['[原始責任歸屬倉別]'] = GLOBAL_RECORDS[idx]['[責任歸屬倉別]'];
+                        }
+                        if (!GLOBAL_RECORDS[idx]['[原始責任歸屬單位]']) {
+                            GLOBAL_RECORDS[idx]['[原始責任歸屬單位]'] = GLOBAL_RECORDS[idx]['[責任歸屬單位]'];
+                        }
 
-                        if (mReason) GLOBAL_RECORDS[idx]['[延遲主因]'] = mReason;
-                        if (mWh) GLOBAL_RECORDS[idx]['[責任歸屬倉別]'] = cleanWarehouseName(mWh);
-                        if (mUnit) GLOBAL_RECORDS[idx]['[責任歸屬單位]'] = (mUnit === '配送') ? '運務' : mUnit;
-                        GLOBAL_RECORDS[idx]['[人工修正原因]'] = mReason; 
+                        if (mReason) {
+                            GLOBAL_RECORDS[idx]['[延遲主因]'] = mReason;
+                            // 只上傳延遲原因、沒填責任歸屬倉別/單位時，依延遲原因自動推算
+                            let derived = deriveRespUnitAndWh(mReason, GLOBAL_RECORDS[idx]);
+                            GLOBAL_RECORDS[idx]['[責任歸屬倉別]'] = mWh ? cleanWarehouseName(mWh) : derived.wh;
+                            GLOBAL_RECORDS[idx]['[責任歸屬單位]'] = mUnit ? ((mUnit === '配送') ? '運務' : mUnit) : derived.unit;
+                        } else {
+                            if (mWh) GLOBAL_RECORDS[idx]['[責任歸屬倉別]'] = cleanWarehouseName(mWh);
+                            if (mUnit) GLOBAL_RECORDS[idx]['[責任歸屬單位]'] = (mUnit === '配送') ? '運務' : mUnit;
+                        }
+                        GLOBAL_RECORDS[idx]['[人工修正原因]'] = mReason;
                         fixCount++;
                     }
                 }
@@ -1476,6 +1537,8 @@
                     if (row['[延遲主因]'] && !row['[人工修正原因]']) {
                         let reCal = run12RulesLogisticsEngine(row);
                         reCal['[原始自動判定原因]'] = reCal['[延遲主因]'];
+                        reCal['[原始責任歸屬倉別]'] = reCal['[責任歸屬倉別]'];
+                        reCal['[原始責任歸屬單位]'] = reCal['[責任歸屬單位]'];
                         return reCal;
                     }
                     return row;
@@ -1486,7 +1549,8 @@
             alert(`📍 特殊店與離島門市名冊匯入完成！
 成功載入 ${SPECIAL_STORES_LIST.length} 家門市（含路線與備註），並已同步重新校正歷史庫數據。`);
             renderSpecialStoreTable();
-            if (currentTabIdx === 0) renderDashboard();
+            renderDashboard();
+            if (currentTabIdx === 1) doQueryFiltering();
         }
 
         function processSectionDHorizontalVolumes(worksheet) {
@@ -1589,8 +1653,7 @@
             document.getElementById('kpiCoreDelays').innerText = coreTargetDelays.toLocaleString();  
             document.getElementById('kpiSlaRate').innerText = `${slaRate.toFixed(2)}%`;
 
-            let unitCounts = { 理貨: 0, 運務: 0, 專屬驗收: 0 };
-            let whGroupData = { 
+            let whGroupData = {
                 大溪倉: { 理貨: 0, 運務: 0, 驗收: 0 }, 
                 岡山倉: { 理貨: 0, 運務: 0, 驗收: 0 }, 
                 大肚倉: { 理貨: 0, 運務: 0, 驗收: 0 } 
@@ -1604,10 +1667,6 @@
                 let reas = r['[延遲主因]'] || "未定義異常";
                 let d = r.日期;
 
-                if (u === "驗收") unitCounts.專屬驗收++;
-                else if (u === "理貨") unitCounts.理貨++;
-                else if (u === "配送" || u === "運務") unitCounts.運務++; 
-
                 if (whGroupData[w_real]) {
                     let mapU = u === "驗收" ? "驗收" : (u === "理貨" ? "理貨" : ((u === "配送" || u === "運務") ? "運務" : null));
                     if (mapU && whGroupData[w_real][mapU] !== undefined) whGroupData[w_real][mapU]++;
@@ -1617,14 +1676,15 @@
                 trendMap[d] = (trendMap[d] || 0) + 1;
             });
 
-            // 1. 責任單位異常佔比分析
+            // 1. 三倉異常佔比分析
+            const whCoreTotals = mainWhs.map(w => whGroupData[w].理貨 + whGroupData[w].運務 + whGroupData[w].驗收);
             if (chartInstances.unit) chartInstances.unit.destroy();
             chartInstances.unit = new Chart(document.getElementById('chartUnit'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['理貨單位', '運務單位', '驗收單位'],
+                    labels: mainWhs,
                     datasets: [{
-                        data: [unitCounts.理貨, unitCounts.運務, unitCounts.專屬驗收],
+                        data: whCoreTotals,
                         backgroundColor: [cLihuo, cPeisong, cYanshou]
                     }]
                 },
@@ -1638,7 +1698,12 @@
                             font: { weight: 'bold', size: 16 },
                             anchor: 'center',
                             align: 'center',
-                            formatter: function(value) { return value > 0 ? value.toLocaleString() + ' 件' : ''; }
+                            formatter: function(value, ctx) {
+                                if (value <= 0) return '';
+                                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? (value / total * 100).toFixed(1) : '0.0';
+                                return [`${value.toLocaleString()} 件`, `${pct}%`];
+                            }
                         }
                     }
                 },
@@ -1712,7 +1777,7 @@
                 }
             });
 
-            // 3. 物流延遲原因排行分佈 (莫蘭迪暖金黃 #D9A05B)
+            // 3. 物流延遲原因排行分佈
             let sortedReasons = Object.entries(reasonMap).sort((a, b) => b[1] - a[1]);
             if (chartInstances.reasons) chartInstances.reasons.destroy();
             chartInstances.reasons = new Chart(document.getElementById('chartReasons'), {
@@ -1746,7 +1811,7 @@
                 }
             });
 
-            // 4. 物流責任件數趨勢走勢圖 (明亮天藍色 #3B82F6)
+            // 4. 物流責任件數趨勢走勢圖
             let sortedDates = Object.keys(trendMap).sort();
             if (chartInstances.trend) chartInstances.trend.destroy();
             chartInstances.trend = new Chart(document.getElementById('chartTrend'), {
@@ -1905,9 +1970,27 @@
             let tbody = document.getElementById('rptMainTableBody');
             tbody.innerHTML = "";
 
-            let d2_0 = vol0 - dataW0.filter(r => r['[延遲主因]'] !== "正常").length;
-            let d2_1 = vol1 - dataW1.filter(r => r['[延遲主因]'] !== "正常").length;
-            let d2_2 = vol2 - dataW2.filter(r => r['[延遲主因]'] !== "正常").length;
+            let logiSum0 = 0, logiSum1 = 0, logiSum2 = 0;
+            logisticsList.forEach(item => {
+                logiSum0 += getReasonCnt(dataW0, item.key);
+                logiSum1 += getReasonCnt(dataW1, item.key);
+                logiSum2 += getReasonCnt(dataW2, item.key);
+            });
+
+            // D+2以內件數 = 寄件數 - 總延遲件數（與儀表板「總延遲件數」KPI 卡同口徑：排除離島/特殊店、上收商流）
+            const getTotalDelayCnt = (dataset) => {
+                const delayRows = dataset.filter(r => r['[延遲主因]'] !== "正常");
+                const cnt03 = delayRows.filter(r => r['[延遲主因]'] === "03 離島/特殊店").length;
+                const cnt06 = delayRows.filter(r => r['[延遲主因]'] === "06 延遲返廠(上收)-商流").length;
+                return delayRows.length - cnt03 - cnt06;
+            };
+            let totalDelay0 = getTotalDelayCnt(dataW0);
+            let totalDelay1 = getTotalDelayCnt(dataW1);
+            let totalDelay2 = getTotalDelayCnt(dataW2);
+
+            let d2_0 = vol0 - totalDelay0;
+            let d2_1 = vol1 - totalDelay1;
+            let d2_2 = vol2 - totalDelay2;
 
             let mainRowsHTML = `
                 <tr>
@@ -1936,14 +2019,6 @@
 
             tbody.innerHTML += mainRowsHTML;
 
-            let logiSum0 = 0, logiSum1 = 0, logiSum2 = 0;
-            logisticsList.forEach(item => {
-                let c0 = getReasonCnt(dataW0, item.key);
-                let c1 = getReasonCnt(dataW1, item.key);
-                let c2 = getReasonCnt(dataW2, item.key);
-                logiSum0 += c0; logiSum1 += c1; logiSum2 += c2;
-            });
-
             document.getElementById('rptLogisticsDelayCnt').innerText = logiSum0.toLocaleString();
             document.getElementById('rptLogisticsDelayRatio').innerText = calcRatio(logiSum0, logiSum1);
 
@@ -1961,11 +2036,13 @@
             const getWhReason = (whName, rKey) => dataW0.filter(r => r['[責任歸屬倉別]'] === whName && r['[延遲主因]'] === rKey).length;
 
             let daxiSum = 0, daduSum = 0, okayamaSum = 0;
+            let whTableRows = [];
             logisticsList.forEach(item => {
                 let dx = getWhReason('大溪倉', item.key);
                 let dd = getWhReason('大肚倉', item.key);
                 let ok = getWhReason('岡山倉', item.key);
                 daxiSum += dx; daduSum += dd; okayamaSum += ok;
+                whTableRows.push({ name: item.name, daxi: dx, dadu: dd, okayama: ok });
 
                 let isHighlight = item.key === "19 延遲配送" ? 'border-2 border-red-500 font-bold bg-red-50' : '';
                 whBody.innerHTML += `
@@ -1987,8 +2064,78 @@
                 </tr>
             `;
 
+            let page2DaxiDelayCnt = getWhReason('大溪倉', "19 延遲配送");
             document.getElementById('rptPage2DelayCnt').innerText = delayPeisong0;
-            document.getElementById('rptPage2DaxiCnt').innerText = getWhReason('大溪倉', "19 延遲配送");
+            document.getElementById('rptPage2DaxiCnt').innerText = page2DaxiDelayCnt;
+
+            LAST_WEEKLY_REPORT = {
+                headerStr,
+                weekLabels: {
+                    w2: `前二週合計 (${formatMD(dtW2Start, dtW2End)})`,
+                    w1: `前一週合計 (${formatMD(dtW1Start, dtW1End)})`,
+                    w0: `本週合計 (${formatMD(dtCurrStart, dtCurrEnd)})`
+                },
+                volumes: { w2: vol2, w1: vol1, w0: vol0, ratio: calcRatio(vol0, vol1) },
+                d2: {
+                    cnt: { w2: d2_2, w1: d2_1, w0: d2_0, ratio: calcRatio(d2_0, d2_1) },
+                    pct: {
+                        w2: (vol2 > 0 ? (d2_2 / vol2 * 100).toFixed(2) : '0') + '%',
+                        w1: (vol1 > 0 ? (d2_1 / vol1 * 100).toFixed(2) : '0') + '%',
+                        w0: (vol0 > 0 ? (d2_0 / vol0 * 100).toFixed(2) : '0') + '%',
+                        ratio: calcRatio(d2_0, d2_1)
+                    }
+                },
+                logisticsDelayCnt: logiSum0,
+                logisticsDelayRatio: calcRatio(logiSum0, logiSum1),
+                topDelayCnt: delayPeisong0,
+                topDelayRatio: calcRatio(delayPeisong0, delayPeisong1),
+                currentActualSla: slaW0,
+                isAchieved: parseFloat(slaW0) >= 100 ? '○' : '✕',
+                whTableRows,
+                whSums: { daxi: daxiSum, dadu: daduSum, okayama: okayamaSum },
+                page2DelayCnt: delayPeisong0,
+                page2DaxiCnt: page2DaxiDelayCnt
+            };
+        }
+
+        function exportWeeklyReportToExcel() {
+            if (!LAST_WEEKLY_REPORT) { alert("請先選擇本週區間，產生簡報內容後再匯出。"); return; }
+            const r = LAST_WEEKLY_REPORT;
+
+            const sheet1 = [
+                ["二、重點說明-履約時效-服務EC(C2C+B2C)"],
+                [`統計區間：${r.headerStr}`],
+                [],
+                ["■ 服務EC履約時效(C2C+B2C)"],
+                ["達成狀況", "本期實績"],
+                ["實績", r.currentActualSla],
+                ["是否達成", r.isAchieved],
+                [],
+                ["寄件日日期", r.weekLabels.w2, r.weekLabels.w1, r.weekLabels.w0, "前週比"],
+                ["寄件數", r.volumes.w2, r.volumes.w1, r.volumes.w0, r.volumes.ratio],
+                ["D+2以內 件數", r.d2.cnt.w2, r.d2.cnt.w1, r.d2.cnt.w0, r.d2.cnt.ratio],
+                ["D+2以內 佔比", r.d2.pct.w2, r.d2.pct.w1, r.d2.pct.w0, r.d2.pct.ratio],
+                [],
+                [`本週歸屬於物流問題延遲共 ${r.logisticsDelayCnt} 件，前週比為 ${r.logisticsDelayRatio}`],
+                [`異常較高件數為延遲配送共 ${r.topDelayCnt} 件、前週比 ${r.topDelayRatio}`]
+            ];
+
+            const sheet2 = [
+                ["二、重點說明-履約時效-服務EC(C2C+B2C)"],
+                [`統計區間：${r.headerStr}`],
+                [],
+                ["■ 各倉物流責任狀況分析"],
+                ["延遲原因", "大溪倉", "大肚倉", "岡山倉"],
+                ...r.whTableRows.map(row => [row.name, row.daxi, row.dadu, row.okayama]),
+                ["件數合計", r.whSums.daxi, r.whSums.dadu, r.whSums.okayama],
+                [],
+                [`延遲配送本週共 ${r.page2DelayCnt} 件，其中大溪倉 ${r.page2DaxiCnt} 件`]
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet1), "簡報第一頁");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet2), "簡報第二頁");
+            XLSX.writeFile(wb, `每週履約時效簡報_${formatDateStr(new Date())}.xlsx`);
         }
 
         function doQueryFiltering() {
@@ -2072,7 +2219,7 @@
             document.getElementById('jumpPageInput').value = queryCurrentPage;
 
             if (totalRows === 0) {
-                body.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">查無符合篩選條件的物流紀錄。</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">查無符合篩選條件的物流紀錄。</td></tr>`;
                 document.getElementById('tablePaginationInfo').innerText = "顯示第 0 到 0 筆，共 0 筆";
                 document.getElementById('btnPrevPage').disabled = true;
                 document.getElementById('btnNextPage').disabled = true;
@@ -2105,8 +2252,7 @@
                     : `<span class="text-slate-700 font-medium">${currentReason}</span>`;
 
                 tr.innerHTML = `
-                    <td class="p-3.5 border-b">${r.日期 || ""}</td>
-                    <td class="p-3.5 border-b text-slate-400 font-semibold">${r.星期 || ""}</td>
+                    <td class="p-3.5 border-b">${formatDateShortMD(r.日期)}</td>
                     <td class="p-3.5 border-b font-mono font-bold text-slate-800">${r.訂單編號 || ""}</td>
                     <td class="p-3.5 border-b">${reasonDisplayHTML}</td>
                     <td class="p-3.5 border-b font-semibold text-slate-700">${r['[責任歸屬倉別]'] || ""}</td> 
@@ -2118,15 +2264,37 @@
 
         function exportQueryToExcel() {
             if (queryFilteredData.length === 0) { alert("目前查無資料可供匯出。"); return; }
-            
-            const exportDataset = queryFilteredData.map(r => ({
-                "日期": r.日期 || "",
-                "星期": r.星期 || "",
-                "訂單編號": r.訂單編號 || "",
-                "[延遲主因]": r['[延遲主因]'] || "",
-                "[責任歸屬倉別]": r['[責任歸屬倉別]'] || "",
-                "[責任歸屬單位]": (r['[責任歸屬單位]'] === "配送") ? "運務" : (r['[責任歸屬單位]'] || "其他")
-            }));
+
+            const internalFields = ['[延遲主因]', '[責任歸屬倉別]', '[責任歸屬單位]', '[原始自動判定原因]', '[原始責任歸屬倉別]', '[原始責任歸屬單位]', '[人工修正原因]', '店號', '倉別'];
+
+            const exportDataset = queryFilteredData.map(r => {
+                const row = {};
+                let dateEmitted = false;
+                Object.keys(r).forEach(key => {
+                    if (internalFields.includes(key)) return;
+                    if (key === '寄件日' || key === '日期') {
+                        if (!dateEmitted) {
+                            row['日期'] = formatDateShortMD(r.日期);
+                            dateEmitted = true;
+                        }
+                    } else if (key === '星期') {
+                        row['星期'] = r.星期;
+                    } else {
+                        row[key] = r[key];
+                    }
+                });
+
+                row["延遲原因"] = r['[延遲主因]'] || "";
+                row["責任歸屬倉別"] = r['[責任歸屬倉別]'] || "";
+                row["責任歸屬單位"] = (r['[責任歸屬單位]'] === "配送") ? "運務" : (r['[責任歸屬單位]'] || "其他");
+
+                const isManuallyFixed = Boolean(r['[人工修正原因]']);
+                row["原始延遲原因"] = isManuallyFixed ? (r['[原始自動判定原因]'] || "") : "";
+                row["原始責任歸屬倉別"] = isManuallyFixed ? (r['[原始責任歸屬倉別]'] || "") : "";
+                row["原始責任歸屬單位"] = isManuallyFixed ? (r['[原始責任歸屬單位]'] || "") : "";
+
+                return row;
+            });
 
             const worksheet = XLSX.utils.json_to_sheet(exportDataset);
             const workbook = XLSX.utils.book_new();
@@ -2141,17 +2309,13 @@
 
         function clearSystemDatabase() {
             if (!confirm("⚠️ 您確定要徹底清空本地快取資料庫嗎？此動作不可逆！")) return;
-            try {
-                let tx = dbInstance.transaction(["records", "config"], "readwrite");
-                tx.objectStore("records").clear();
-                tx.objectStore("config").clear();
-                tx.oncomplete = function() {
-                    alert("🗑️ 本地快取資料庫已成功清空！系統即將重新載入。");
-                    location.reload();
-                };
-            } catch (e) {
+            let tx = dbInstance.transaction(["records", "config"], "readwrite");
+            tx.objectStore("records").clear();
+            tx.objectStore("config").clear();
+            tx.oncomplete = function() {
+                alert("🗑️ 本地快取資料庫已成功清空！系統即將重新載入。");
                 location.reload();
-            }
+            };
         }
 
         function copyCombinedJsonToClipboard() {
@@ -2163,7 +2327,7 @@
 
         async function saveAndConnectGist() {
             const url = document.getElementById('gistUrlInput').value.trim();
-            if (!url) { alert("請貼上 GitHub Gist 或 Raw 網址"); return; }
+            if (!url) { alert("請貼上 GitHub Raw 網址"); return; }
             await connectToGist(url, false);
         }
 
@@ -2178,7 +2342,7 @@
                     SPECIAL_STORES_LIST = cloudData.special_stores || [];
                     if (cloudData.users) DYNAMIC_USERS = cloudData.users;
                     
-                    try { localStorage.setItem('logistics_gist_url', url); } catch (e) {}
+                    localStorage.setItem('logistics_gist_url', url);
                     persistMemoryToDB();
 
                     updateSyncStatusUI(true);
@@ -2186,7 +2350,7 @@
                     if (!isAuto) alert("🎉 遠端雲端歷史總庫讀取同步成功！");
                     renderDashboard();
                 } else {
-                    throw new Error("格式錯誤：此 JSON 內容不符合戰情室資料結構");
+                    throw new Error("格式錯誤：此 JSON 內容不符合戰情室結構");
                 }
             } catch (err) {
                 updateSyncStatusUI(false);
@@ -2234,7 +2398,7 @@
             if (type === 'A') {
                 filename = "第一區_原始物流大表_標準範本.xlsx";
                 headers = ["日期", "星期", "類別", "訂單編號", "寄件日", "寄件時間", "離店日", "離店時間", "離店帳號", "離店倉別", "驗收日", "驗收時間", "驗收倉", "理貨設備讀取日期", "理貨設備讀取時間", "理貨PDA裝箱日期", "理貨PDA裝箱時間", "理貨疊板日期", "理貨疊板時間", "出貨倉", "出貨配別", "運務士疊板日期", "運務士疊板時間", "運務士卸貨日期", "運務士卸貨時間", "到店日", "到店驗收時間", "最終貨態", "寄件通路", "寄件店號", "寄件店名", "取件通路", "取件店號", "取件店名", "商品價值", "備註", "上收件", "異常點交日期", "異常點交原因", "店舖壓缺時間", "寄件店回收路線", "取件店配送路線", "寄件店行政區", "配送店行政區"];
-                dummyData = [{"訂單編號": "EC202600001", "寄件日": "20260622", "寄件時間": "232027", "離店日": "20260622", "離店時間": "232027", "離店帳號": "MING_CHANG-API", "驗收日": "20260624", "驗收時間": "015545", "驗收倉": "01 大溪倉", "出貨倉": "06 大肚倉", "寄件店號": "024878", "寄件店名": "大園環西門市", "寄件店行政區": "桃園市大園區"}];
+                dummyData = [{"訂單編號": "EC202600001", "寄件日": "20260706", "寄件時間": "232027", "離店日": "20260706", "離店時間": "232027", "離店帳號": "MING_CHANG-API", "驗收日": "20260707", "驗收時間": "015545", "驗收倉": "01 大溪倉", "出貨倉": "06 大肚倉", "寄件店號": "024878", "寄件店名": "大園環西門市", "寄件店行政區": "桃園市大園區"}];
             } else if (type === 'B') {
                 filename = "第二區_人工原因修正名冊_標準範本.xlsx";
                 headers = ["日期", "星期", "類別", "訂單編號", "寄件日", "寄件時間", "離店日", "離店時間", "離店帳號", "離店倉別", "驗收日", "驗收時間", "驗收倉", "理貨設備讀取日期", "理貨設備讀取時間", "理貨PDA裝箱日期", "理貨PDA裝箱時間", "理貨疊板日期", "理貨疊板時間", "出貨倉", "出貨配別", "運務士疊板日期", "運務士疊板時間", "運務士卸貨日期", "運務士卸貨時間", "到店日", "到店驗收時間", "最終貨態", "寄件通路", "寄件店號", "寄件店名", "取件通路", "取件店號", "取件店名", "商品價值", "備註", "上收件", "異常點交日期", "異常點交原因", "店舖壓缺時間", "寄件店回收路線", "取件店配送路線", "寄件店行政區", "配送店行政區", "延遲原因", "責任歸屬倉別", "責任歸屬單位"];
@@ -2245,9 +2409,9 @@
                 dummyData = [{"店號": "025101", "店名": "南港生技店", "路線路順": "1A01", "備註": "廠區、學區、車站店"}];
             } else if (type === 'D') {
                 filename = "第四區_每日寄件數大表_標準範本.xlsx";
-                headers = ["日期", "2026-06-01", "2026-06-02", "2026-06-03"];
+                headers = ["日期", "2026-07-01", "2026-07-02", "2026-07-03"];
                 dummyData = [
-                    {"日期": "寄件數", "2026-06-01": "45000", "2026-06-02": "48000", "2026-06-03": "51000"}
+                    {"日期": "寄件數", "2026-07-01": "45000", "2026-07-02": "48000", "2026-07-03": "51000"}
                 ];
             }
             const ws = XLSX.utils.json_to_sheet(dummyData, { header: headers });
