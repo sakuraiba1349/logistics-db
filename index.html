@@ -14,7 +14,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <!-- SheetJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
+    <!-- PptxGenJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
     <style>
         :root {
             --bg-main: #F4F6F8;
@@ -606,7 +608,55 @@
                     <div class="text-[15px] space-y-1.5 border-t pt-4">
                         <p class="font-bold">・ 重點說明：</p>
                         <p>・ 本週主要高異常原因為<b class="text-red-600" id="rptPage2TopReason">延遲配送</b>。</p>
-                        <p>・ 延遲配送本週共 <b id="rptPage2DelayCnt">0</b> 件，其中大溪倉 <b id="rptPage2DaxiCnt">0</b> 件，後續將針對高異常路線啟用訊息提醒並透過 PDA 強化過刷。</p>
+                        <p>・ <span id="rptPage2TopReasonEcho">延遲配送</span>本週共 <b id="rptPage2DelayCnt">0</b> 件，其中<span id="rptPage2TopWhName">大溪倉</span> <b id="rptPage2DaxiCnt">0</b> 件，後續將針對高異常路線啟用訊息提醒並透過 PDA 強化過刷。</p>
+                    </div>
+                </div>
+
+                <!-- 履約時效月報表（D+2/D+3 分析） -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4 max-w-5xl mx-auto w-full print:hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-emerald-50 text-emerald-600 p-2.5 rounded-xl">
+                            <i data-lucide="table" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-[16px] font-bold text-slate-800">履約時效月報表（D+2/D+3 分析）</h3>
+                            <p class="text-[15px] text-slate-500">自訂日期區間，統計 D+2以內／D+3以上延遲明細，可產出 PPT</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-end gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[15px] font-semibold text-slate-600">統計區間：</span>
+                            <input type="date" id="monthlyReportStart" onchange="renderMonthlyDelayReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
+                            <span class="text-[15px] text-slate-400">至</span>
+                            <input type="date" id="monthlyReportEnd" onchange="renderMonthlyDelayReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
+                        </div>
+                        <div>
+                            <label class="block text-[13px] font-semibold text-slate-500 mb-1">延遲轉運（無自動判定規則，請手動輸入件數）</label>
+                            <input type="number" id="monthlyReportTransferManual" value="0" min="0" onchange="renderMonthlyDelayReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px] w-32">
+                        </div>
+                        <button onclick="exportMonthlyDelayReportToPPT()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
+                            <i data-lucide="presentation" class="w-5 h-5"></i> 產出 PPT
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center border-collapse text-[15px] border border-slate-300">
+                            <thead class="bg-slate-700 text-white font-semibold">
+                                <tr>
+                                    <th class="p-2.5 border border-slate-300" colspan="2">寄件月</th>
+                                    <th class="p-2.5 border border-slate-300" colspan="2" id="monthlyReportRangeLbl">-- ~ --合計</th>
+                                </tr>
+                                <tr>
+                                    <th class="p-2 border border-slate-300" colspan="2"></th>
+                                    <th class="p-2 border border-slate-300">件數</th>
+                                    <th class="p-2 border border-slate-300">佔比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthlyReportTableBody" class="divide-y divide-slate-200">
+                                <!-- 動態帶入 -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -773,6 +823,7 @@
         let GLOBAL_VOLUMES = {};
         let SPECIAL_STORES_LIST = [];
         let LAST_WEEKLY_REPORT = null;
+        let LAST_MONTHLY_REPORT = null;
 
         let currentTabIdx = 0;
         let queryFilteredData = [];
@@ -915,7 +966,7 @@
             if (idx === 2) renderCalendarView();
             if (idx === 3) renderAccountTable();
             if (idx === 4) renderSpecialStoreTable();
-            if (idx === 5) renderWeeklyReport();
+            if (idx === 5) { renderWeeklyReport(); renderMonthlyDelayReport(); }
         }
 
         function syncEndDateToStart(startId, endId) {
@@ -942,6 +993,9 @@
             
             document.getElementById('reportWeekStart').value = "2026-07-06";
             document.getElementById('reportWeekEnd').value = "2026-07-12";
+
+            document.getElementById('monthlyReportStart').value = "2026-07-01";
+            document.getElementById('monthlyReportEnd').value = "2026-07-31";
         }
 
         function resetDashboardDates() {
@@ -2043,14 +2097,25 @@
                 let ok = getWhReason('岡山倉', item.key);
                 daxiSum += dx; daduSum += dd; okayamaSum += ok;
                 whTableRows.push({ name: item.name, daxi: dx, dadu: dd, okayama: ok });
+            });
 
-                let isHighlight = item.key === "19 延遲配送" ? 'border-2 border-red-500 font-bold bg-red-50' : '';
+            // 在所有「延遲原因 x 倉別」的格子裡，找出件數最高的那一格
+            let topCell = { name: '', wh: '', whCol: '', cnt: -1 };
+            whTableRows.forEach(row => {
+                [['daxi', '大溪倉', row.daxi], ['dadu', '大肚倉', row.dadu], ['okayama', '岡山倉', row.okayama]].forEach(([col, whName, cnt]) => {
+                    if (cnt > topCell.cnt) topCell = { name: row.name, wh: whName, whCol: col, cnt };
+                });
+            });
+            const hlClass = 'border-2 border-red-500 font-bold bg-red-50';
+
+            whTableRows.forEach(row => {
+                let isTopRow = topCell.cnt > 0 && row.name === topCell.name;
                 whBody.innerHTML += `
                     <tr>
-                        <td class="p-2 border font-semibold bg-slate-50">${item.name}</td>
-                        <td class="p-2 border ${isHighlight}">${dx}</td>
-                        <td class="p-2 border">${dd}</td>
-                        <td class="p-2 border">${ok}</td>
+                        <td class="p-2 border font-semibold bg-slate-50">${row.name}</td>
+                        <td class="p-2 border ${isTopRow && topCell.whCol === 'daxi' ? hlClass : ''}">${row.daxi}</td>
+                        <td class="p-2 border ${isTopRow && topCell.whCol === 'dadu' ? hlClass : ''}">${row.dadu}</td>
+                        <td class="p-2 border ${isTopRow && topCell.whCol === 'okayama' ? hlClass : ''}">${row.okayama}</td>
                     </tr>
                 `;
             });
@@ -2064,9 +2129,14 @@
                 </tr>
             `;
 
-            let page2DaxiDelayCnt = getWhReason('大溪倉', "19 延遲配送");
-            document.getElementById('rptPage2DelayCnt').innerText = delayPeisong0;
-            document.getElementById('rptPage2DaxiCnt').innerText = page2DaxiDelayCnt;
+            let topReasonItem = logisticsList.find(item => item.name === topCell.name) || logisticsList[0];
+            let topReasonTotalCnt = getReasonCnt(dataW0, topReasonItem.key);
+
+            document.getElementById('rptPage2TopReason').innerText = topCell.name;
+            document.getElementById('rptPage2TopReasonEcho').innerText = topCell.name;
+            document.getElementById('rptPage2DelayCnt').innerText = topReasonTotalCnt;
+            document.getElementById('rptPage2TopWhName').innerText = topCell.wh;
+            document.getElementById('rptPage2DaxiCnt').innerText = topCell.cnt;
 
             LAST_WEEKLY_REPORT = {
                 headerStr,
@@ -2093,8 +2163,10 @@
                 isAchieved: parseFloat(slaW0) >= 100 ? '○' : '✕',
                 whTableRows,
                 whSums: { daxi: daxiSum, dadu: daduSum, okayama: okayamaSum },
-                page2DelayCnt: delayPeisong0,
-                page2DaxiCnt: page2DaxiDelayCnt
+                page2TopReason: topCell.name,
+                page2DelayCnt: topReasonTotalCnt,
+                page2TopWhName: topCell.wh,
+                page2TopWhCnt: topCell.cnt
             };
         }
 
@@ -2129,13 +2201,188 @@
                 ...r.whTableRows.map(row => [row.name, row.daxi, row.dadu, row.okayama]),
                 ["件數合計", r.whSums.daxi, r.whSums.dadu, r.whSums.okayama],
                 [],
-                [`延遲配送本週共 ${r.page2DelayCnt} 件，其中大溪倉 ${r.page2DaxiCnt} 件`]
+                [`${r.page2TopReason}本週共 ${r.page2DelayCnt} 件，其中${r.page2TopWhName} ${r.page2TopWhCnt} 件`]
             ];
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet1), "簡報第一頁");
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet2), "簡報第二頁");
             XLSX.writeFile(wb, `每週履約時效簡報_${formatDateStr(new Date())}.xlsx`);
+        }
+
+        function renderMonthlyDelayReport() {
+            const startStr = document.getElementById('monthlyReportStart').value;
+            const endStr = document.getElementById('monthlyReportEnd').value;
+            if (!startStr || !endStr) return;
+
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            const formatMD = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+            const rangeLbl = `${formatMD(start)}-${formatMD(end)}合計`;
+            document.getElementById('monthlyReportRangeLbl').innerText = `寄件月 ${rangeLbl}`;
+
+            const data = GLOBAL_RECORDS.filter(r => r.日期 >= startStr && r.日期 <= endStr);
+
+            let totalCnt = 0, hasManualInput = false, cur = new Date(start);
+            while (cur <= end) {
+                let key = formatDateStr(cur);
+                if (GLOBAL_VOLUMES[key]) { totalCnt += GLOBAL_VOLUMES[key]; hasManualInput = true; }
+                cur.setDate(cur.getDate() + 1);
+            }
+            if (!hasManualInput || totalCnt === 0) totalCnt = data.length;
+
+            const cnt = (...keys) => data.filter(r => keys.includes(r['[延遲主因]'])).length;
+            const pct = (n) => totalCnt > 0 ? (n / totalCnt * 100).toFixed(3) + '%' : '0.000%';
+            const transferManual = parseInt(document.getElementById('monthlyReportTransferManual').value) || 0;
+
+            const logisticsRows = [
+                { name: "延遲返廠", cnt: cnt("17 延遲返廠(上收)-物流", "18 延遲返廠") },
+                { name: "延遲驗收", cnt: cnt("11 延遲驗收", "13 驗收/轉運錯誤") },
+                { name: "延遲轉運", cnt: transferManual },
+                { name: "延遲裝箱", cnt: cnt("14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)") },
+                { name: "PDA漏刷進店", cnt: cnt("16 PDA漏刷進店") },
+                { name: "延遲配送", cnt: cnt("19 延遲配送") }
+            ];
+            const logisticsSum = logisticsRows.reduce((s, row) => s + row.cnt, 0);
+
+            const shopLate = cnt("07 店舖晚交寄(蘆竹)", "08 店舖晚交寄");
+            const abnormalHandover = cnt("01 異常點交");
+            const shopFix = cnt("02 店舖修正");
+
+            const d3Total = shopLate + abnormalHandover + shopFix + logisticsSum;
+            const d2Total = totalCnt - d3Total;
+
+            let html = `
+                <tr class="font-bold">
+                    <td class="p-2 border text-left" colspan="2">總件數</td>
+                    <td class="p-2 border">${totalCnt.toLocaleString()}</td>
+                    <td class="p-2 border">100%</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border text-left" colspan="2">D+2以內件數</td>
+                    <td class="p-2 border">${d2Total.toLocaleString()}</td>
+                    <td class="p-2 border">${pct(d2Total)}</td>
+                </tr>
+                <tr class="font-semibold bg-slate-50">
+                    <td class="p-2 border text-left" colspan="2">D+3以上小計</td>
+                    <td class="p-2 border">${d3Total.toLocaleString()}</td>
+                    <td class="p-2 border">${pct(d3Total)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border text-left" colspan="2">店舖晚交寄</td>
+                    <td class="p-2 border">${shopLate.toLocaleString()}</td>
+                    <td class="p-2 border">${pct(shopLate)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border text-left" colspan="2">異常點交</td>
+                    <td class="p-2 border">${abnormalHandover.toLocaleString()}</td>
+                    <td class="p-2 border">${pct(abnormalHandover)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border text-left" colspan="2">店舖開立修正</td>
+                    <td class="p-2 border">${shopFix.toLocaleString()}</td>
+                    <td class="p-2 border">${pct(shopFix)}</td>
+                </tr>
+            `;
+
+            logisticsRows.forEach((row, idx) => {
+                html += `
+                <tr>
+                    ${idx === 0 ? `<td class="p-2 border text-left font-semibold bg-slate-50" rowspan="${logisticsRows.length}">物流作業疏失</td>` : ''}
+                    <td class="p-2 border text-left">${row.name}</td>
+                    <td class="p-2 border">${row.cnt.toLocaleString()}</td>
+                    <td class="p-2 border">${pct(row.cnt)}</td>
+                </tr>
+                `;
+            });
+
+            document.getElementById('monthlyReportTableBody').innerHTML = html;
+
+            LAST_MONTHLY_REPORT = {
+                rangeLbl,
+                totalCnt,
+                d2: { cnt: d2Total, pct: pct(d2Total) },
+                d3: { cnt: d3Total, pct: pct(d3Total) },
+                shopLate: { cnt: shopLate, pct: pct(shopLate) },
+                abnormalHandover: { cnt: abnormalHandover, pct: pct(abnormalHandover) },
+                shopFix: { cnt: shopFix, pct: pct(shopFix) },
+                logisticsRows: logisticsRows.map(row => ({ name: row.name, cnt: row.cnt, pct: pct(row.cnt) }))
+            };
+        }
+
+        function exportMonthlyDelayReportToPPT() {
+            if (!LAST_MONTHLY_REPORT) { alert("請先選擇統計區間，產生報表內容後再匯出。"); return; }
+            if (typeof PptxGenJS === 'undefined') { alert("PPT 產生套件載入失敗，請確認網路連線後重新整理頁面再試一次。"); return; }
+            const r = LAST_MONTHLY_REPORT;
+
+            const pptx = new PptxGenJS();
+            const slide = pptx.addSlide();
+
+            slide.addText("履約時效月報表（D+2/D+3 分析）", { x: 0.4, y: 0.3, w: 9, h: 0.5, fontSize: 20, bold: true });
+            slide.addText(`統計區間：寄件月 ${r.rangeLbl}`, { x: 0.4, y: 0.8, w: 9, h: 0.4, fontSize: 13, color: "666666" });
+
+            const headerFill = "1E3A8A";
+            const tableRows = [
+                [
+                    { text: "分類", options: { bold: true, fill: { color: headerFill }, color: "FFFFFF", colspan: 2 } },
+                    { text: "件數", options: { bold: true, fill: { color: headerFill }, color: "FFFFFF" } },
+                    { text: "佔比", options: { bold: true, fill: { color: headerFill }, color: "FFFFFF" } }
+                ],
+                [
+                    { text: "總件數", options: { colspan: 2, bold: true } },
+                    { text: r.totalCnt.toLocaleString() },
+                    { text: "100%" }
+                ],
+                [
+                    { text: "D+2以內件數", options: { colspan: 2 } },
+                    { text: r.d2.cnt.toLocaleString() },
+                    { text: r.d2.pct }
+                ],
+                [
+                    { text: "D+3以上小計", options: { colspan: 2, bold: true, fill: { color: "F1F5F9" } } },
+                    { text: r.d3.cnt.toLocaleString(), options: { fill: { color: "F1F5F9" } } },
+                    { text: r.d3.pct, options: { fill: { color: "F1F5F9" } } }
+                ],
+                [
+                    { text: "店舖晚交寄", options: { colspan: 2 } },
+                    { text: r.shopLate.cnt.toLocaleString() },
+                    { text: r.shopLate.pct }
+                ],
+                [
+                    { text: "異常點交", options: { colspan: 2 } },
+                    { text: r.abnormalHandover.cnt.toLocaleString() },
+                    { text: r.abnormalHandover.pct }
+                ],
+                [
+                    { text: "店舖開立修正", options: { colspan: 2 } },
+                    { text: r.shopFix.cnt.toLocaleString() },
+                    { text: r.shopFix.pct }
+                ],
+                ...r.logisticsRows.map((row, idx) => idx === 0
+                    ? [
+                        { text: "物流作業疏失", options: { rowspan: r.logisticsRows.length, bold: true } },
+                        { text: row.name },
+                        { text: row.cnt.toLocaleString() },
+                        { text: row.pct }
+                    ]
+                    : [
+                        { text: row.name },
+                        { text: row.cnt.toLocaleString() },
+                        { text: row.pct }
+                    ]
+                )
+            ];
+
+            slide.addTable(tableRows, {
+                x: 0.4, y: 1.3, w: 9, h: 4.5,
+                fontSize: 12,
+                border: { type: "solid", color: "CBD5E1", pt: 1 },
+                align: "center",
+                valign: "middle",
+                autoPage: false
+            });
+
+            pptx.writeFile({ fileName: `履約時效月報表_${formatDateStr(new Date())}.pptx` });
         }
 
         function doQueryFiltering() {
