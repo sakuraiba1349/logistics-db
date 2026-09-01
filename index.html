@@ -119,7 +119,7 @@
     <div id="appContainer" class="hidden h-screen flex flex-col md:flex-row w-full overflow-hidden">
         
         <!-- 側邊欄 (系統標題 15px，選單與使用者卡片 13px) -->
-        <aside class="w-full md:w-64 bg-slate-800 text-slate-100 flex flex-col shrink-0 border-b md:border-b-0 md:border-r border-slate-700 print:hidden text-[13px]">
+        <aside class="w-full md:w-64 bg-slate-700 text-slate-100 flex flex-col shrink-0 border-b md:border-b-0 md:border-r border-slate-700 print:hidden text-[13.5px]">
             <div class="p-4 border-b border-slate-700 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <div class="p-1.5 bg-emerald-600 rounded-lg"><i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i></div>
@@ -147,24 +147,27 @@
             <!-- 分頁導覽選單 -->
             <nav id="sidebarNav" class="flex-1 p-3 flex flex-col gap-1.5 overflow-y-auto">
                 <button id="navTab0" onclick="switchTab(0)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg bg-emerald-600 text-white text-left transition">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> 服務EC履約時效
+                    <i data-lucide="layout-dashboard" class="w-4 h-4 text-indigo-400"></i> 服務EC履約時效
                 </button>
-                <button id="navTab1" onclick="switchTab(1)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition">
-                    <i data-lucide="search" class="w-4 h-4"></i> 明細查詢
+                <button id="navTab5" onclick="switchTab(5)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-100 hover:bg-slate-600 hover:text-white text-left transition">
+                    <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> 每週履約時效簡報
                 </button>
-                <button id="navTab2" onclick="switchTab(2)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition">
-                    <i data-lucide="calendar-days" class="w-4 h-4"></i> 寄件數行事曆
+                <button id="navTab1" onclick="switchTab(1)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-100 hover:bg-slate-600 hover:text-white text-left transition">
+                    <i data-lucide="search" class="w-4 h-4 text-sky-400"></i> 明細查詢
+                </button>
+                <button id="navTab2" onclick="switchTab(2)" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-100 hover:bg-slate-600 hover:text-white text-left transition">
+                    <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i> 寄件數行事曆
                 </button>
 
                 <!-- 🔒 管理者限定分頁 -->
-                <button id="navTab4" onclick="switchTab(4)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition">
-                    <i data-lucide="map-pin" class="w-4 h-4"></i> 特殊店名單查詢
+                <button id="navTab4" onclick="switchTab(4)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-100 hover:bg-slate-600 hover:text-white text-left transition border-t border-slate-700 mt-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-rose-400"></i> 特殊店名單查詢
                 </button>
-                <button id="navTab5" onclick="switchTab(5)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition border-t border-slate-700 mt-2">
-                    <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> 週報簡報產出
+                <button id="navTab6" onclick="switchTab(6)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-100 hover:bg-slate-600 hover:text-white text-left transition">
+                    <i data-lucide="table" class="w-4 h-4 text-purple-400"></i> 履約時效月報表
                 </button>
-                <button id="navTab3" onclick="switchTab(3)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition border border-dashed border-slate-600 mt-1">
-                    <i data-lucide="database" class="w-4 h-4"></i> 後台資料管理
+                <button id="navTab3" onclick="switchTab(3)" style="display: none;" class="w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-100 hover:bg-slate-600 hover:text-white text-left transition border border-dashed border-slate-600 mt-1">
+                    <i data-lucide="database" class="w-4 h-4 text-cyan-400"></i> 後台資料管理
                 </button>
             </nav>
         </aside>
@@ -194,6 +197,16 @@
                     <input type="date" id="filterStartDate" onchange="syncEndDateToStart('filterStartDate','filterEndDate'); renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
                     <span class="text-slate-400 text-[15px]">至</span>
                     <input type="date" id="filterEndDate" onchange="renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="warehouse" class="w-5 h-5 text-slate-500"></i>
+                        <span class="text-[16px] font-semibold text-slate-700">倉別：</span>
+                        <select id="filterWarehouse" onchange="renderDashboard()" class="border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                            <option value="">全部倉別</option>
+                            <option value="大溪倉">大溪倉</option>
+                            <option value="岡山倉">岡山倉</option>
+                            <option value="大肚倉">大肚倉</option>
+                        </select>
+                    </div>
                     <button onclick="resetDashboardDates()" class="ml-auto text-[15px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold transition">重設範圍</button>
                 </div>
 
@@ -484,19 +497,21 @@
                             <span class="text-[15px] text-slate-400">至</span>
                             <input type="date" id="reportWeekEnd" onchange="renderWeeklyReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
                         </div>
-                        <button onclick="exportWeeklyReportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
-                            <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> 匯出簡報 Excel
-                        </button>
-                        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
-                            <i data-lucide="printer" class="w-5 h-5"></i> 列印 / 匯出簡報 PDF
-                        </button>
+                        <div id="weeklyReportExportBtns" style="display: none;" class="flex items-center gap-4">
+                            <button onclick="exportWeeklyReportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
+                                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> 匯出簡報 Excel
+                            </button>
+                            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
+                                <i data-lucide="printer" class="w-5 h-5"></i> 列印 / 匯出簡報 PDF
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 簡報第一頁 -->
                 <div class="bg-white p-8 rounded-xl shadow border border-slate-200 max-w-5xl mx-auto w-full font-sans text-slate-800 print:shadow-none print:p-0 print:border-none">
                     <div class="flex justify-between items-end border-b-2 border-slate-800 pb-3 mb-5">
-                        <h2 class="text-2xl font-bold tracking-tight">二、重點說明-履約時效-服務EC(C2C+B2C)</h2>
+                        <h2 class="text-2xl font-bold tracking-tight">履約時效週報摘要</h2>
                         <span class="text-[15px] font-semibold text-slate-600" id="rptDateRangeLbl1">統計區間：出貨日 --/--~--/--</span>
                     </div>
 
@@ -541,7 +556,7 @@
                     <table class="w-full text-center border-collapse text-[15px] mb-5 border border-slate-300">
                         <thead class="bg-blue-800 text-white font-semibold">
                             <tr>
-                                <th class="p-2.5 border border-slate-300 w-1/3" colspan="2">寄件日日期</th>
+                                <th class="p-2.5 border border-slate-300 w-1/3" colspan="3">寄件日日期</th>
                                 <th class="p-2.5 border border-slate-300" id="rptWeekHeader2">前二週合計</th>
                                 <th class="p-2.5 border border-slate-300" id="rptWeekHeader1">前一週合計</th>
                                 <th class="p-2.5 border border-slate-300 bg-blue-900" id="rptWeekHeader0">本週合計</th>
@@ -562,7 +577,7 @@
                 <!-- 簡報第二頁 -->
                 <div class="bg-white p-8 rounded-xl shadow border border-slate-200 max-w-5xl mx-auto w-full font-sans text-slate-800 print:shadow-none print:p-0 print:border-none print:break-before-page">
                     <div class="flex justify-between items-end border-b-2 border-slate-800 pb-3 mb-5">
-                        <h2 class="text-2xl font-bold tracking-tight">二、重點說明-履約時效-服務EC(C2C+B2C)</h2>
+                        <h2 class="text-2xl font-bold tracking-tight">履約時效週報摘要</h2>
                         <span class="text-[15px] font-semibold text-slate-600" id="rptDateRangeLbl2">統計區間：出貨日 --/--~--/--</span>
                     </div>
 
@@ -608,10 +623,15 @@
                     <div class="text-[15px] space-y-1.5 border-t pt-4">
                         <p class="font-bold">・ 重點說明：</p>
                         <p>・ 本週主要高異常原因為<b class="text-red-600" id="rptPage2TopReason">延遲配送</b>。</p>
-                        <p>・ <span id="rptPage2TopReasonEcho">延遲配送</span>本週共 <b id="rptPage2DelayCnt">0</b> 件，其中<span id="rptPage2TopWhName">大溪倉</span> <b id="rptPage2DaxiCnt">0</b> 件，後續將針對高異常路線啟用訊息提醒並透過 PDA 強化過刷。</p>
+                        <p>・ <span id="rptPage2TopReasonEcho">延遲配送</span>本週共 <b id="rptPage2DelayCnt">0</b> 件，其中<span id="rptPage2TopWhName">大溪倉</span> <b id="rptPage2DaxiCnt">0</b> 件。</p>
                     </div>
                 </div>
+            </section>
 
+            <!-- ========================================== -->
+            <!-- 第七頁：履約時效月報表（管理者限定）         -->
+            <!-- ========================================== -->
+            <section id="tabContent6" class="hidden flex-1 overflow-y-auto p-6 flex flex-col gap-6 text-[15px]">
                 <!-- 履約時效月報表（D+2/D+3 分析） -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4 max-w-5xl mx-auto w-full print:hidden">
                     <div class="flex items-center gap-3">
@@ -683,8 +703,8 @@
                         <div>
                             <label class="block text-[15px] font-bold text-slate-600 mb-1.5">指派系統權限</label>
                             <select id="manageAccRole" class="w-full border border-slate-200 bg-white rounded-lg px-3.5 py-2 text-[15px]">
-                                <option value="viewer">一般檢視者 (僅看戰情/查詢/行事曆)</option>
-                                <option value="admin">最高管理者 (全權限包含特殊店/簡報/後台)</option>
+                                <option value="viewer">一般檢視者 (戰情/查詢/行事曆/每週簡報)</option>
+                                <option value="admin">最高管理者 (全權限包含特殊店/月報表/後台/簡報匯出)</option>
                             </select>
                         </div>
                         <div class="flex items-end">
@@ -722,6 +742,9 @@
                         </div>
                         <button onclick="saveAndConnectGist()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow transition flex items-center gap-2 shrink-0">
                             <i data-lucide="link" class="w-5 h-5"></i> 連線並讀取雲端歷史庫
+                        </button>
+                        <button onclick="disconnectGist()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow transition flex items-center gap-2 shrink-0">
+                            <i data-lucide="unlink" class="w-5 h-5"></i> 取消連線
                         </button>
                     </div>
                 </div>
@@ -765,11 +788,25 @@
                                 <input type="file" id="fileUploadD" accept=".xlsx, .xls" onchange="handleExcelUpload(event, 'D')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                 <div class="text-slate-500 pointer-events-none flex flex-col items-center gap-1.5">
                                     <i data-lucide="file-digit" class="w-7 h-7 text-blue-600"></i>
-                                    <span class="text-[16px] font-bold text-blue-800">第四區：上傳全倉每日寄件總件數大表 (雙列橫向矩陣解析)</span>
-                                    <span class="text-[15px] text-blue-600">對齊第一列「日期」、第二列「寄件數」/ 自動清洗並覆蓋歷史庫</span>
+                                    <span class="text-[16px] font-bold text-blue-800">第四區：上傳各倉每日寄件數大表 (橫向矩陣解析)</span>
+                                    <span class="text-[15px] text-blue-600">第一列為「日期」，其餘每列為「大溪倉／大肚倉／岡山倉」的每日寄件數 / 自動清洗並覆蓋歷史庫</span>
                                 </div>
                             </div>
                             <button onclick="downloadBlankTemplate('D')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-4 rounded-xl text-[15px] font-bold flex flex-col items-center justify-center gap-1.5 shrink-0 h-full min-w-[120px]">
+                                <i data-lucide="download" class="w-5 h-5"></i> 下載範本
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1 border-2 border-dashed border-blue-200 rounded-xl p-5 text-center bg-blue-50/40 hover:bg-blue-50 transition relative">
+                                <input type="file" id="fileUploadE" accept=".xlsx, .xls" onchange="handleExcelUpload(event, 'E')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <div class="text-slate-500 pointer-events-none flex flex-col items-center gap-1.5">
+                                    <i data-lucide="clipboard-check" class="w-7 h-7 text-blue-600"></i>
+                                    <span class="text-[16px] font-bold text-blue-800">第五區：上傳異常點交單位對照表</span>
+                                    <span class="text-[15px] text-blue-600">對齊「訂單編號」「點交單位」兩欄，用於判定「01 異常點交」延遲原因實際所屬倉別</span>
+                                </div>
+                            </div>
+                            <button onclick="downloadBlankTemplate('E')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-4 rounded-xl text-[15px] font-bold flex flex-col items-center justify-center gap-1.5 shrink-0 h-full min-w-[120px]">
                                 <i data-lucide="download" class="w-5 h-5"></i> 下載範本
                             </button>
                         </div>
@@ -822,6 +859,7 @@
         let GLOBAL_RECORDS = [];
         let GLOBAL_VOLUMES = {};
         let SPECIAL_STORES_LIST = [];
+        let HANDOVER_UNIT_MAP = {};
         let LAST_WEEKLY_REPORT = null;
         let LAST_MONTHLY_REPORT = null;
 
@@ -910,20 +948,23 @@
             document.getElementById('currentUserName').innerText = username;
             document.getElementById('currentUserRoleLbl').innerText = `權限：${roleName}`;
 
-            const navBtnBackstage = document.getElementById('navTab3'); 
-            const navBtnSpecialStores = document.getElementById('navTab4'); 
-            const navBtnReport = document.getElementById('navTab5');    
+            const navBtnBackstage = document.getElementById('navTab3');
+            const navBtnSpecialStores = document.getElementById('navTab4');
+            const navBtnMonthlyReport = document.getElementById('navTab6');
+            const weeklyReportExportBtns = document.getElementById('weeklyReportExportBtns');
 
             if (role === 'admin') {
                 navBtnBackstage.style.display = 'flex';
                 navBtnSpecialStores.style.display = 'flex';
-                navBtnReport.style.display = 'flex';
+                navBtnMonthlyReport.style.display = 'flex';
+                weeklyReportExportBtns.style.display = 'flex';
             } else {
                 navBtnBackstage.style.display = 'none';
                 navBtnSpecialStores.style.display = 'none';
-                navBtnReport.style.display = 'none';
+                navBtnMonthlyReport.style.display = 'none';
+                weeklyReportExportBtns.style.display = 'none';
             }
-            
+
             switchTab(0);
             loadLocalDataToMemory();
         }
@@ -938,16 +979,16 @@
         }
 
         function switchTab(idx) {
-            if ((idx === 3 || idx === 4 || idx === 5) && currentUserRole !== 'admin') {
+            if ((idx === 3 || idx === 4 || idx === 6) && currentUserRole !== 'admin') {
                 alert("⚠️ 權限不足：該分頁僅限最高管理者登入後存取！");
                 return;
             }
 
             currentTabIdx = idx;
-            const titles = ["服務EC履約時效", "明細查詢", "寄件數行事曆", "後台資料管理", "特殊店名單查詢", "每週履約時效簡報"];
+            const titles = ["服務EC履約時效", "明細查詢", "寄件數行事曆", "後台資料管理", "特殊店名單查詢", "每週履約時效簡報", "履約時效月報表"];
             document.getElementById('pageTitle').innerText = titles[idx] || "服務EC履約時效";
 
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 7; i++) {
                 const tabBtn = document.getElementById(`navTab${i}`);
                 const tabContent = document.getElementById(`tabContent${i}`);
                 if (!tabBtn || !tabContent) continue;
@@ -955,9 +996,9 @@
                     tabBtn.className = "w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg bg-emerald-600 text-white text-left transition";
                     tabContent.classList.remove('hidden');
                 } else {
-                    tabBtn.className = "w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white text-left transition";
+                    tabBtn.className = "w-full flex items-center gap-2.5 px-3.5 py-3 font-semibold rounded-lg text-slate-100 hover:bg-slate-600 hover:text-white text-left transition";
                     if (i === 3) tabBtn.classList.add('border', 'border-dashed', 'border-slate-600', 'mt-1');
-                    if (i === 5) tabBtn.classList.add('border-t', 'border-slate-700', 'mt-2');
+                    if (i === 4) tabBtn.classList.add('border-t', 'border-slate-700', 'mt-2');
                     tabContent.classList.add('hidden');
                 }
             }
@@ -966,7 +1007,8 @@
             if (idx === 2) renderCalendarView();
             if (idx === 3) renderAccountTable();
             if (idx === 4) renderSpecialStoreTable();
-            if (idx === 5) { renderWeeklyReport(); renderMonthlyDelayReport(); }
+            if (idx === 5) renderWeeklyReport();
+            if (idx === 6) renderMonthlyDelayReport();
         }
 
         function syncEndDateToStart(startId, endId) {
@@ -1000,6 +1042,7 @@
 
         function resetDashboardDates() {
             setDefaultFilterDates();
+            document.getElementById('filterWarehouse').value = "";
             renderDashboard();
         }
 
@@ -1065,7 +1108,11 @@
                                 DYNAMIC_USERS = getUsers.result.value;
                             }
 
-                            renderDashboard();
+                            let getHandover = cfgStore.get("handover_units");
+                            getHandover.onsuccess = function() {
+                                if (getHandover.result) HANDOVER_UNIT_MAP = getHandover.result.value || {};
+                                renderDashboard();
+                            };
                         };
                     };
                 };
@@ -1083,6 +1130,7 @@
             cfgStore.put({ key: "volumes", value: GLOBAL_VOLUMES });
             cfgStore.put({ key: "special_stores", value: SPECIAL_STORES_LIST });
             cfgStore.put({ key: "users", value: DYNAMIC_USERS });
+            cfgStore.put({ key: "handover_units", value: HANDOVER_UNIT_MAP });
         }
 
         function renderAccountTable() {
@@ -1181,7 +1229,7 @@
 
             for (let day = 1; day <= totalDaysInMonth; day++) {
                 const formattedCellDateStr = `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const currentVolume = GLOBAL_VOLUMES[formattedCellDateStr] || 0;
+                const currentVolume = getDailyVolume(formattedCellDateStr);
 
                 const cell = document.createElement('div');
                 cell.className = "bg-morandi-peisong-op hover:bg-slate-100 border border-slate-200 rounded-xl p-3.5 min-h-[100px] flex flex-col justify-between text-left cursor-pointer transition transform hover:-translate-y-0.5 shadow-sm";
@@ -1205,20 +1253,22 @@
             lucide.createIcons();
         }
 
-        function handleCalendarCellClick(dateStr, oldVal) {
-            const newValStr = prompt(`📝 正在直接修改 [${dateStr}] 的每日寄件總數
-目前設定件數：${oldVal.toLocaleString()} 件
+        function handleCalendarCellClick(dateStr, oldTotal) {
+            const newVolumes = {};
+            for (const wh of VOLUME_WHS) {
+                const oldWhVal = getDailyVolume(dateStr, wh);
+                const inputStr = prompt(`📝 正在修改 [${dateStr}] ${wh} 的寄件數\n（目前合計：${oldTotal.toLocaleString()} 件）\n\n請輸入 ${wh} 的寄件數：`, oldWhVal);
+                if (inputStr === null) return;
 
-請輸入新的寄件總數：`, oldVal);
-            if (newValStr === null) return; 
-
-            const newVal = parseInt(newValStr.replace(/,/g, ''));
-            if (isNaN(newVal) || newVal < 0) {
-                alert("❌ 請輸入大於或等於 0 的正確整數數值！");
-                return;
+                const val = parseInt(inputStr.replace(/,/g, ''));
+                if (isNaN(val) || val < 0) {
+                    alert(`❌ ${wh} 請輸入大於或等於 0 的正確整數數值！`);
+                    return;
+                }
+                newVolumes[wh] = val;
             }
 
-            GLOBAL_VOLUMES[dateStr] = newVal;
+            GLOBAL_VOLUMES[dateStr] = newVolumes;
             persistMemoryToDB();
             renderCalendarView();
             renderDashboard();
@@ -1233,7 +1283,29 @@
             if (s.includes("大肚")) return "大肚倉";
             if (s.includes("蘆竹")) return "蘆竹";
             if (s.includes("店")) return "店舖";
-            return "其他"; 
+            return "其他";
+        }
+
+        // 責任單位是「其他」「店舖」時，責任歸屬倉別不是具體倉別，這裡依延遲原因判斷該筆訂單實際屬於哪一倉（僅供倉別篩選/圖表分組使用，不影響明細顯示的「責任歸屬倉別」欄位）
+        function getActualWarehouseForFilter(row) {
+            let respWh = row['[責任歸屬倉別]'];
+            if (['大溪倉', '大肚倉', '岡山倉'].includes(respWh)) return respWh;
+
+            let reason = row['[延遲主因]'] || '';
+            if (reason.includes('01 異常點交')) {
+                return HANDOVER_UNIT_MAP[row['訂單編號']] || respWh;
+            }
+            if (reason.includes('02 店舖修正')) {
+                return cleanWarehouseName(row['出貨倉']);
+            }
+            if (reason.includes('07 店舖晚交寄(蘆竹)')) {
+                return '大溪倉';
+            }
+            if (reason.includes('08 店舖晚交寄')) {
+                return cleanWarehouseName(row['離店倉別'] || row['離店倉']);
+            }
+            // 13 驗收/轉運錯誤、17 延遲返廠(上收)-物流：責任歸屬倉別本身已經是實際倉別，直接採用（走最上面的判斷）
+            return respWh;
         }
 
         // 🌟 強化版 Excel 時間解析
@@ -1572,6 +1644,25 @@
             renderDashboard();
         }
 
+        function processSectionEHandoverUnit(rows) {
+            let fixCount = 0;
+            rows.forEach(row => {
+                let rawOrder = String(row['訂單編號'] || row['單號'] || "").trim().replace(/\.0/g, '');
+                if (!rawOrder) return;
+                let orderId = rawOrder.padStart(11, '0');
+
+                let unit = String(row['點交單位'] || "").trim();
+                if (!unit) return;
+
+                HANDOVER_UNIT_MAP[orderId] = cleanWarehouseName(unit);
+                fixCount++;
+            });
+
+            persistMemoryToDB();
+            alert(`📋 異常點交單位對照表匯入完成！共登錄 ${fixCount} 筆訂單的點交單位。`);
+            renderDashboard();
+        }
+
         function processSectionCSpecialStores(rows) {
             SPECIAL_STORES_LIST = [];
 
@@ -1607,39 +1698,71 @@
             if (currentTabIdx === 1) doQueryFiltering();
         }
 
-        function processSectionDHorizontalVolumes(worksheet) {
-            const arr = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
-            if (arr.length < 2) { alert("❌ 檔案結構錯誤：橫式雙列數據矩陣列數不足。"); return; }
+        const VOLUME_WHS = ['大溪倉', '大肚倉', '岡山倉'];
 
-            let datesRow = arr[0]; 
-            let valuesRow = arr[1]; 
-            
-            if (String(datesRow[0]).trim() !== "日期" || String(valuesRow[0]).trim() !== "寄件數") {
-                alert("❌ 範本格式不符：A1 必須為 '日期' 且 A2 必須為 '寄件數'。");
+        function getDailyVolume(dateStr, wh) {
+            const entry = GLOBAL_VOLUMES[dateStr];
+            if (!entry) return 0;
+            if (typeof entry === 'number') {
+                // 舊格式（單一總數，沒有倉別拆分），只有查總數時才給值
+                return wh ? 0 : entry;
+            }
+            if (wh) return entry[wh] || 0;
+            return VOLUME_WHS.reduce((sum, w) => sum + (entry[w] || 0), 0);
+        }
+
+        function processSectionDHorizontalVolumes(worksheet) {
+            // raw:true 讓日期欄一律拿到 Excel 原始序列數字，不受儲存格自訂顯示格式（例如「M月D日」不含年份）影響
+            const arr = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true, defval: '' });
+            if (arr.length < 2) { alert("❌ 檔案結構錯誤：橫式數據矩陣列數不足。"); return; }
+
+            let datesRow = arr[0];
+            if (String(datesRow[0]).trim() !== "日期") {
+                alert("❌ 範本格式不符：A1 必須為 '日期'。");
                 return;
             }
 
+            let touchedDates = new Set();
             let importCount = 0;
-            for (let colIdx = 1; colIdx < datesRow.length; colIdx++) {
-                let rawDateStr = String(datesRow[colIdx]).trim();
-                let rawValStr = String(valuesRow[colIdx]).trim();
 
-                if (!rawDateStr || rawDateStr === "") continue;
+            for (let rowIdx = 1; rowIdx < arr.length; rowIdx++) {
+                let rowLabel = String(arr[rowIdx][0]).trim();
+                let isWhRow = VOLUME_WHS.includes(rowLabel);
+                let isTotalRow = rowLabel === "寄件數";
+                if (!isWhRow && !isTotalRow) continue;
 
-                let dObj = parseExcelDate(rawDateStr);
-                let finalizedYMD = dObj ? formatDateStr(dObj) : null;
+                for (let colIdx = 1; colIdx < datesRow.length; colIdx++) {
+                    let rawDateStr = String(datesRow[colIdx]).trim();
+                    if (!rawDateStr) continue;
 
-                if (!finalizedYMD) continue;
+                    let dObj = parseExcelDate(rawDateStr);
+                    let finalizedYMD = dObj ? formatDateStr(dObj) : null;
+                    if (!finalizedYMD) continue;
 
-                let cleanedVal = parseInt(rawValStr.replace(/,/g, ''));
-                if (isNaN(cleanedVal)) cleanedVal = 0;
+                    let rawValStr = String(arr[rowIdx][colIdx] || '').trim();
+                    let cleanedVal = parseInt(rawValStr.replace(/,/g, ''));
+                    if (isNaN(cleanedVal)) cleanedVal = 0;
 
-                GLOBAL_VOLUMES[finalizedYMD] = cleanedVal;
-                importCount++;
+                    if (isTotalRow) {
+                        GLOBAL_VOLUMES[finalizedYMD] = cleanedVal;
+                    } else {
+                        if (!GLOBAL_VOLUMES[finalizedYMD] || typeof GLOBAL_VOLUMES[finalizedYMD] === 'number') {
+                            GLOBAL_VOLUMES[finalizedYMD] = { 大溪倉: 0, 大肚倉: 0, 岡山倉: 0 };
+                        }
+                        GLOBAL_VOLUMES[finalizedYMD][rowLabel] = cleanedVal;
+                    }
+                    touchedDates.add(finalizedYMD);
+                    importCount++;
+                }
+            }
+
+            if (importCount === 0) {
+                alert("❌ 範本格式不符：找不到可辨識的資料列（需為「寄件數」或「大溪倉／大肚倉／岡山倉」列）。");
+                return;
             }
 
             persistMemoryToDB();
-            alert(`🎉 第四區橫式寄件數大表解析成功！共匯入 ${importCount} 天的數據大底。`);
+            alert(`🎉 第四區橫式寄件數大表解析成功！共匯入 ${touchedDates.size} 天的寄件數資料。`);
             renderDashboard();
         }
 
@@ -1666,6 +1789,7 @@
 
             const start = document.getElementById('filterStartDate').value;
             const end = document.getElementById('filterEndDate').value;
+            const selectedWh = document.getElementById('filterWarehouse').value;
             let totalVolume = 0;
             let hasManualInput = false;
 
@@ -1673,24 +1797,26 @@
             const stopDate = new Date(end);
             while (cur <= stopDate) {
                 let sStr = formatDateStr(cur);
-                if (GLOBAL_VOLUMES[sStr]) {
-                    totalVolume += GLOBAL_VOLUMES[sStr];
+                let v = getDailyVolume(sStr, selectedWh);
+                if (v) {
+                    totalVolume += v;
                     hasManualInput = true;
                 }
                 cur.setDate(cur.getDate() + 1);
             }
 
             if (!hasManualInput || totalVolume === 0) {
-                totalVolume = data.length; 
+                totalVolume = data.filter(r => !selectedWh || getActualWarehouseForFilter(r) === selectedWh).length;
             }
 
-            const delayRows = data.filter(r => r['[延遲主因]'] !== "正常");
-            
+            const delayRows = data.filter(r => r['[延遲主因]'] !== "正常" && (!selectedWh || getActualWarehouseForFilter(r) === selectedWh));
+
             const allCnt03 = delayRows.filter(r => r['[延遲主因]'] === "03 離島/特殊店").length;
             const allCnt06 = delayRows.filter(r => r['[延遲主因]'] === "06 延遲返廠(上收)-商流").length;
             const globalDelaysFix = delayRows.length - allCnt03 - allCnt06;
 
-            const mainWhs = ['大溪倉', '岡山倉', '大肚倉'];
+            const mainWhs = selectedWh ? [selectedWh] : ['大溪倉', '岡山倉', '大肚倉'];
+            // 物流責任件數／各倉圖表只計「責任歸屬倉別」本身就是實際倉別的訂單，店舖/其他責任的即使能歸到某倉出貨，也不算物流責任
             const chartCoreRows = delayRows.filter(r => mainWhs.includes(r['[責任歸屬倉別]']));
             
             const coreCnt03 = chartCoreRows.filter(r => r['[延遲主因]'] === "03 離島/特殊店").length;
@@ -1731,6 +1857,7 @@
             });
 
             // 1. 三倉異常佔比分析
+            const whColorMap = { 大溪倉: cLihuo, 岡山倉: cPeisong, 大肚倉: cYanshou };
             const whCoreTotals = mainWhs.map(w => whGroupData[w].理貨 + whGroupData[w].運務 + whGroupData[w].驗收);
             if (chartInstances.unit) chartInstances.unit.destroy();
             chartInstances.unit = new Chart(document.getElementById('chartUnit'), {
@@ -1739,7 +1866,7 @@
                     labels: mainWhs,
                     datasets: [{
                         data: whCoreTotals,
-                        backgroundColor: [cLihuo, cPeisong, cYanshou]
+                        backgroundColor: mainWhs.map(w => whColorMap[w])
                     }]
                 },
                 options: { 
@@ -1998,7 +2125,7 @@
                 let total = 0, cur = new Date(s), stop = new Date(e);
                 while(cur <= stop) {
                     let key = formatDateStr(cur);
-                    if (GLOBAL_VOLUMES[key]) total += GLOBAL_VOLUMES[key];
+                    total += getDailyVolume(key);
                     cur.setDate(cur.getDate() + 1);
                 }
                 return total;
@@ -2009,8 +2136,217 @@
             let vol2 = getVol(dtW2Start, dtW2End) || dataW2.length;
 
             const calcRatio = (curr, prev) => prev > 0 ? ((curr / prev) * 100).toFixed(2) + '%' : '0.00%';
+            const pctNum = (n, total) => total > 0 ? (n / total * 100) : 0;
 
-            const getReasonCnt = (dataset, reasonName) => dataset.filter(r => r['[延遲主因]'] === reasonName).length;
+            const getReasonCnt = (dataset, ...keys) => dataset.filter(r => keys.includes(r['[延遲主因]'])).length;
+
+            let tbody = document.getElementById('rptMainTableBody');
+            tbody.innerHTML = "";
+
+            // 非物流責任：店舖晚交寄(蘆竹/其他)、異常點交、店舖開立修正
+            const nonLogisticsCategories = [
+                { name: "蘆竹", subgroup: "寄件→離店延遲", keys: ["07 店舖晚交寄(蘆竹)"] },
+                { name: "其他", subgroup: "寄件→離店延遲", keys: ["08 店舖晚交寄"] },
+                { name: "異常點交", keys: ["01 異常點交"] },
+                { name: "店舖開立修正", keys: ["02 店舖修正"] }
+            ];
+            // 物流責任：延遲返廠(17+18)、延遲驗收(11+13)、延遲轉運(人工修正時才會出現)、延遲裝箱(14+15)、PDA漏刷進店(16)、延遲配送(19)
+            const logisticsCategories = [
+                { name: "延遲返廠", keys: ["17 延遲返廠(上收)-物流", "18 延遲返廠"] },
+                { name: "延遲驗收", keys: ["11 延遲驗收", "13 驗收/轉運錯誤"] },
+                { name: "延遲轉運", keys: ["延遲轉運"] },
+                { name: "延遲裝箱", keys: ["14 延遲裝箱(跨倉)", "15 延遲裝箱(當倉)"] },
+                { name: "PDA漏刷進店", keys: ["16 PDA漏刷進店"] },
+                { name: "延遲配送", keys: ["19 延遲配送"] }
+            ];
+
+            const withCounts = (categories) => categories.map(c => ({
+                ...c,
+                c2: getReasonCnt(dataW2, ...c.keys),
+                c1: getReasonCnt(dataW1, ...c.keys),
+                c0: getReasonCnt(dataW0, ...c.keys)
+            }));
+
+            const nonLogiRows = withCounts(nonLogisticsCategories);
+            const logiRows = withCounts(logisticsCategories);
+
+            const sum2 = (rows) => rows.reduce((s, r) => s + r.c2, 0);
+            const sum1 = (rows) => rows.reduce((s, r) => s + r.c1, 0);
+            const sum0 = (rows) => rows.reduce((s, r) => s + r.c0, 0);
+
+            const nonLogiSum2 = sum2(nonLogiRows), nonLogiSum1 = sum1(nonLogiRows), nonLogiSum0 = sum0(nonLogiRows);
+            const mainLogiSum2 = sum2(logiRows), mainLogiSum1 = sum1(logiRows), mainLogiSum0 = sum0(logiRows);
+
+            const d3_2 = nonLogiSum2 + mainLogiSum2;
+            const d3_1 = nonLogiSum1 + mainLogiSum1;
+            const d3_0 = nonLogiSum0 + mainLogiSum0;
+
+            let d2_0 = vol0 - d3_0;
+            let d2_1 = vol1 - d3_1;
+            let d2_2 = vol2 - d3_2;
+
+            const d2Pct2 = pctNum(d2_2, vol2), d2Pct1 = pctNum(d2_1, vol1), d2Pct0 = pctNum(d2_0, vol0);
+            const nonLogiPct2 = pctNum(nonLogiSum2, vol2), nonLogiPct1 = pctNum(nonLogiSum1, vol1), nonLogiPct0 = pctNum(nonLogiSum0, vol0);
+            const logiPct2 = pctNum(mainLogiSum2, vol2), logiPct1 = pctNum(mainLogiSum1, vol1), logiPct0 = pctNum(mainLogiSum0, vol0);
+
+            // 物流責任項目裡，本週件數最高的那一項用紅框標示
+            const topLogiItem = logiRows.reduce((top, r) => (r.c0 > (top ? top.c0 : -1) ? r : top), null);
+            const mainHlClass = 'border-2 border-red-500 font-bold bg-red-50';
+
+            // 本週高異常原因：在「物流責任」各項目 x 三倉裡，找出件數最高的那一格
+            let topAnomalyCell = { name: '', wh: '', cnt: -1 };
+            logisticsCategories.forEach(item => {
+                ['大溪倉', '大肚倉', '岡山倉'].forEach(wh => {
+                    let c = dataW0.filter(r => r['[責任歸屬倉別]'] === wh && item.keys.includes(r['[延遲主因]'])).length;
+                    if (c > topAnomalyCell.cnt) topAnomalyCell = { name: item.name, wh, cnt: c };
+                });
+            });
+
+            const topAnomalyItem = logisticsCategories.find(c => c.name === topAnomalyCell.name);
+            const topAnomalyRows = topAnomalyCell.cnt > 0
+                ? dataW0.filter(r => r['[責任歸屬倉別]'] === topAnomalyCell.wh && topAnomalyItem.keys.includes(r['[延遲主因]']))
+                : [];
+
+            // 異常狀況說明：看是否集中在單一天（單日佔比 >= 40%）
+            let anomalyDesc = '-';
+            if (topAnomalyRows.length > 0) {
+                let dayCounts = {};
+                topAnomalyRows.forEach(r => { dayCounts[r.日期] = (dayCounts[r.日期] || 0) + 1; });
+                let maxDayCnt = Math.max(...Object.values(dayCounts));
+                anomalyDesc = (maxDayCnt / topAnomalyRows.length >= 0.4) ? '當日大量延遲' : '當週大量延遲';
+            }
+
+            // 重點異常路線／店舖：只有延遲配送、延遲返廠才判斷，其餘標示 -
+            const mostFrequent = (rows, field) => {
+                let counts = {};
+                rows.forEach(r => {
+                    let v = String(r[field] || '').trim();
+                    if (v) counts[v] = (counts[v] || 0) + 1;
+                });
+                let entries = Object.entries(counts);
+                if (entries.length === 0) return '-';
+                return entries.reduce((top, cur) => cur[1] > top[1] ? cur : top)[0];
+            };
+
+            let topRoute = '-', topStore = '-';
+            if (topAnomalyCell.name === '延遲配送') {
+                topRoute = mostFrequent(topAnomalyRows, '取件店配送路線');
+                topStore = mostFrequent(topAnomalyRows, '取件店名');
+            } else if (topAnomalyCell.name === '延遲返廠') {
+                topRoute = mostFrequent(topAnomalyRows, '寄件店回收路線');
+                topStore = mostFrequent(topAnomalyRows, '寄件店名');
+            }
+
+            document.getElementById('rptHighAnomalyTableBody').innerHTML = `
+                <tr>
+                    <td class="p-2.5 border">${topAnomalyCell.wh || '-'}</td>
+                    <td class="p-2.5 border font-semibold text-red-600">${topAnomalyCell.name || '-'}</td>
+                    <td class="p-2.5 border text-left">${anomalyDesc}</td>
+                    <td class="p-2.5 border">${topRoute}</td>
+                    <td class="p-2.5 border">${topStore}</td>
+                </tr>
+            `;
+
+            // 傳回不含 <tr> 包裝的儲存格內容，labelColspan 決定「名稱」欄要吃掉幾個實體欄位
+            const itemRowHTML = (label, c2, c1, c0, labelColspan, highlight = false) => `
+                <td class="p-2 border text-left" colspan="${labelColspan}">${label}</td>
+                <td class="p-2 border">${c2.toLocaleString()}</td>
+                <td class="p-2 border">${c1.toLocaleString()}</td>
+                <td class="p-2 border ${highlight ? mainHlClass : ''}">${c0.toLocaleString()}</td>
+                <td class="p-2 border">${calcRatio(c0, c1)}</td>
+            `;
+
+            let mainRowsHTML = `
+                <tr>
+                    <td class="p-2 border font-semibold bg-slate-50" colspan="3">寄件數</td>
+                    <td class="p-2 border">${vol2.toLocaleString()}</td>
+                    <td class="p-2 border">${vol1.toLocaleString()}</td>
+                    <td class="p-2 border font-bold bg-blue-50">${vol0.toLocaleString()}</td>
+                    <td class="p-2 border font-semibold">${calcRatio(vol0, vol1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border font-semibold bg-slate-50" rowspan="2">D+2以內</td>
+                    ${itemRowHTML('件數', d2_2, d2_1, d2_0, 2)}
+                </tr>
+                <tr>
+                    <td class="p-2 border text-left" colspan="2">佔比</td>
+                    <td class="p-2 border">${d2Pct2.toFixed(2)}%</td>
+                    <td class="p-2 border">${d2Pct1.toFixed(2)}%</td>
+                    <td class="p-2 border font-bold bg-blue-50">${d2Pct0.toFixed(2)}%</td>
+                    <td class="p-2 border font-semibold">${calcRatio(d2Pct0, d2Pct1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border font-semibold bg-slate-50" colspan="3">D+3以上件數</td>
+                    <td class="p-2 border">${d3_2.toLocaleString()}</td>
+                    <td class="p-2 border">${d3_1.toLocaleString()}</td>
+                    <td class="p-2 border font-bold bg-blue-50">${d3_0.toLocaleString()}</td>
+                    <td class="p-2 border font-semibold">${calcRatio(d3_0, d3_1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border font-semibold bg-slate-50" rowspan="${nonLogiRows.length + 2}">非物流責任</td>
+                    <td class="p-2 border font-semibold bg-slate-50" rowspan="2">寄件→離店延遲</td>
+                    <td class="p-2 border text-left">${nonLogiRows[0].name}</td>
+                    <td class="p-2 border">${nonLogiRows[0].c2.toLocaleString()}</td>
+                    <td class="p-2 border">${nonLogiRows[0].c1.toLocaleString()}</td>
+                    <td class="p-2 border">${nonLogiRows[0].c0.toLocaleString()}</td>
+                    <td class="p-2 border">${calcRatio(nonLogiRows[0].c0, nonLogiRows[0].c1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border text-left">${nonLogiRows[1].name}</td>
+                    <td class="p-2 border">${nonLogiRows[1].c2.toLocaleString()}</td>
+                    <td class="p-2 border">${nonLogiRows[1].c1.toLocaleString()}</td>
+                    <td class="p-2 border">${nonLogiRows[1].c0.toLocaleString()}</td>
+                    <td class="p-2 border">${calcRatio(nonLogiRows[1].c0, nonLogiRows[1].c1)}</td>
+                </tr>
+                ${nonLogiRows.slice(2).map(r => `<tr>${itemRowHTML(r.name, r.c2, r.c1, r.c0, 2)}</tr>`).join('')}
+                <tr>
+                    <td class="p-2 border font-semibold text-left" colspan="2">件數合計</td>
+                    <td class="p-2 border">${nonLogiSum2.toLocaleString()}</td>
+                    <td class="p-2 border">${nonLogiSum1.toLocaleString()}</td>
+                    <td class="p-2 border font-bold bg-blue-50">${nonLogiSum0.toLocaleString()}</td>
+                    <td class="p-2 border font-semibold">${calcRatio(nonLogiSum0, nonLogiSum1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border font-semibold text-left" colspan="2">異常佔比</td>
+                    <td class="p-2 border">${nonLogiPct2.toFixed(2)}%</td>
+                    <td class="p-2 border">${nonLogiPct1.toFixed(2)}%</td>
+                    <td class="p-2 border font-bold bg-blue-50">${nonLogiPct0.toFixed(2)}%</td>
+                    <td class="p-2 border font-semibold">${calcRatio(nonLogiPct0, nonLogiPct1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border font-semibold bg-slate-50" rowspan="${logiRows.length + 2}">物流責任</td>
+                    ${itemRowHTML(logiRows[0].name, logiRows[0].c2, logiRows[0].c1, logiRows[0].c0, 2, topLogiItem && logiRows[0].name === topLogiItem.name)}
+                </tr>
+                ${logiRows.slice(1).map(r => `<tr>${itemRowHTML(r.name, r.c2, r.c1, r.c0, 2, topLogiItem && r.name === topLogiItem.name)}</tr>`).join('')}
+                <tr>
+                    <td class="p-2 border font-semibold text-left" colspan="2">件數合計</td>
+                    <td class="p-2 border">${mainLogiSum2.toLocaleString()}</td>
+                    <td class="p-2 border">${mainLogiSum1.toLocaleString()}</td>
+                    <td class="p-2 border font-bold bg-blue-50">${mainLogiSum0.toLocaleString()}</td>
+                    <td class="p-2 border font-semibold">${calcRatio(mainLogiSum0, mainLogiSum1)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 border font-semibold text-left" colspan="2">異常佔比</td>
+                    <td class="p-2 border">${logiPct2.toFixed(2)}%</td>
+                    <td class="p-2 border">${logiPct1.toFixed(2)}%</td>
+                    <td class="p-2 border font-bold bg-blue-50">${logiPct0.toFixed(2)}%</td>
+                    <td class="p-2 border font-semibold">${calcRatio(logiPct0, logiPct1)}</td>
+                </tr>
+            `;
+
+            tbody.innerHTML += mainRowsHTML;
+
+            document.getElementById('rptLogisticsDelayCnt').innerText = mainLogiSum0.toLocaleString();
+            document.getElementById('rptLogisticsDelayRatio').innerText = calcRatio(mainLogiSum0, mainLogiSum1);
+
+            let delayPeisong0 = getReasonCnt(dataW0, "19 延遲配送");
+            let delayPeisong1 = getReasonCnt(dataW1, "19 延遲配送");
+            document.getElementById('rptTopDelayCnt').innerText = delayPeisong0.toLocaleString();
+            document.getElementById('rptTopDelayRatio').innerText = calcRatio(delayPeisong0, delayPeisong1);
+
+            let slaW0 = vol0 > 0 ? (((vol0 - mainLogiSum0) / vol0) * 100).toFixed(1) + '%' : '0.0%';
+            document.getElementById('rptCurrentActualSla').innerText = slaW0;
+            document.getElementById('rptIsAchieved').innerText = parseFloat(slaW0) >= 100 ? '○' : '✕';
 
             let logisticsList = [
                 { name: "延遲返廠", key: "18 延遲返廠" },
@@ -2020,70 +2356,6 @@
                 { name: "PDA漏刷進店", key: "16 PDA漏刷進店" },
                 { name: "延遲配送", key: "19 延遲配送" }
             ];
-
-            let tbody = document.getElementById('rptMainTableBody');
-            tbody.innerHTML = "";
-
-            let logiSum0 = 0, logiSum1 = 0, logiSum2 = 0;
-            logisticsList.forEach(item => {
-                logiSum0 += getReasonCnt(dataW0, item.key);
-                logiSum1 += getReasonCnt(dataW1, item.key);
-                logiSum2 += getReasonCnt(dataW2, item.key);
-            });
-
-            // D+2以內件數 = 寄件數 - 總延遲件數（與儀表板「總延遲件數」KPI 卡同口徑：排除離島/特殊店、上收商流）
-            const getTotalDelayCnt = (dataset) => {
-                const delayRows = dataset.filter(r => r['[延遲主因]'] !== "正常");
-                const cnt03 = delayRows.filter(r => r['[延遲主因]'] === "03 離島/特殊店").length;
-                const cnt06 = delayRows.filter(r => r['[延遲主因]'] === "06 延遲返廠(上收)-商流").length;
-                return delayRows.length - cnt03 - cnt06;
-            };
-            let totalDelay0 = getTotalDelayCnt(dataW0);
-            let totalDelay1 = getTotalDelayCnt(dataW1);
-            let totalDelay2 = getTotalDelayCnt(dataW2);
-
-            let d2_0 = vol0 - totalDelay0;
-            let d2_1 = vol1 - totalDelay1;
-            let d2_2 = vol2 - totalDelay2;
-
-            let mainRowsHTML = `
-                <tr>
-                    <td class="p-2 border font-semibold bg-slate-50" colspan="2">寄件數</td>
-                    <td class="p-2 border">${vol2.toLocaleString()}</td>
-                    <td class="p-2 border">${vol1.toLocaleString()}</td>
-                    <td class="p-2 border font-bold bg-blue-50">${vol0.toLocaleString()}</td>
-                    <td class="p-2 border font-semibold">${calcRatio(vol0, vol1)}</td>
-                </tr>
-                <tr>
-                    <td class="p-2 border font-semibold bg-slate-50" rowspan="2">D+2以內</td>
-                    <td class="p-2 border text-left">件數</td>
-                    <td class="p-2 border">${d2_2.toLocaleString()}</td>
-                    <td class="p-2 border">${d2_1.toLocaleString()}</td>
-                    <td class="p-2 border font-bold bg-blue-50">${d2_0.toLocaleString()}</td>
-                    <td class="p-2 border font-semibold">${calcRatio(d2_0, d2_1)}</td>
-                </tr>
-                <tr>
-                    <td class="p-2 border text-left">佔比</td>
-                    <td class="p-2 border">${(vol2 > 0 ? (d2_2/vol2*100).toFixed(2) : '0')}%</td>
-                    <td class="p-2 border">${(vol1 > 0 ? (d2_1/vol1*100).toFixed(2) : '0')}%</td>
-                    <td class="p-2 border font-bold bg-blue-50">${(vol0 > 0 ? (d2_0/vol0*100).toFixed(2) : '0')}%</td>
-                    <td class="p-2 border font-semibold">${calcRatio(d2_0, d2_1)}</td>
-                </tr>
-            `;
-
-            tbody.innerHTML += mainRowsHTML;
-
-            document.getElementById('rptLogisticsDelayCnt').innerText = logiSum0.toLocaleString();
-            document.getElementById('rptLogisticsDelayRatio').innerText = calcRatio(logiSum0, logiSum1);
-
-            let delayPeisong0 = getReasonCnt(dataW0, "19 延遲配送");
-            let delayPeisong1 = getReasonCnt(dataW1, "19 延遲配送");
-            document.getElementById('rptTopDelayCnt').innerText = delayPeisong0.toLocaleString();
-            document.getElementById('rptTopDelayRatio').innerText = calcRatio(delayPeisong0, delayPeisong1);
-
-            let slaW0 = vol0 > 0 ? (((vol0 - logiSum0) / vol0) * 100).toFixed(1) + '%' : '0.0%';
-            document.getElementById('rptCurrentActualSla').innerText = slaW0;
-            document.getElementById('rptIsAchieved').innerText = parseFloat(slaW0) >= 100 ? '○' : '✕';
 
             let whBody = document.getElementById('rptWhStackTableBody');
             whBody.innerHTML = "";
@@ -2149,14 +2421,19 @@
                 d2: {
                     cnt: { w2: d2_2, w1: d2_1, w0: d2_0, ratio: calcRatio(d2_0, d2_1) },
                     pct: {
-                        w2: (vol2 > 0 ? (d2_2 / vol2 * 100).toFixed(2) : '0') + '%',
-                        w1: (vol1 > 0 ? (d2_1 / vol1 * 100).toFixed(2) : '0') + '%',
-                        w0: (vol0 > 0 ? (d2_0 / vol0 * 100).toFixed(2) : '0') + '%',
-                        ratio: calcRatio(d2_0, d2_1)
+                        w2: d2Pct2.toFixed(2) + '%', w1: d2Pct1.toFixed(2) + '%', w0: d2Pct0.toFixed(2) + '%',
+                        ratio: calcRatio(d2Pct0, d2Pct1)
                     }
                 },
-                logisticsDelayCnt: logiSum0,
-                logisticsDelayRatio: calcRatio(logiSum0, logiSum1),
+                d3: { w2: d3_2, w1: d3_1, w0: d3_0, ratio: calcRatio(d3_0, d3_1) },
+                nonLogiRows: nonLogiRows.map(r => ({ name: r.name, w2: r.c2, w1: r.c1, w0: r.c0, ratio: calcRatio(r.c0, r.c1) })),
+                nonLogiSum: { w2: nonLogiSum2, w1: nonLogiSum1, w0: nonLogiSum0, ratio: calcRatio(nonLogiSum0, nonLogiSum1) },
+                nonLogiPct: { w2: nonLogiPct2.toFixed(2) + '%', w1: nonLogiPct1.toFixed(2) + '%', w0: nonLogiPct0.toFixed(2) + '%', ratio: calcRatio(nonLogiPct0, nonLogiPct1) },
+                logiRows: logiRows.map(r => ({ name: r.name, w2: r.c2, w1: r.c1, w0: r.c0, ratio: calcRatio(r.c0, r.c1) })),
+                logiSum: { w2: mainLogiSum2, w1: mainLogiSum1, w0: mainLogiSum0, ratio: calcRatio(mainLogiSum0, mainLogiSum1) },
+                logiPct: { w2: logiPct2.toFixed(2) + '%', w1: logiPct1.toFixed(2) + '%', w0: logiPct0.toFixed(2) + '%', ratio: calcRatio(logiPct0, logiPct1) },
+                logisticsDelayCnt: mainLogiSum0,
+                logisticsDelayRatio: calcRatio(mainLogiSum0, mainLogiSum1),
                 topDelayCnt: delayPeisong0,
                 topDelayRatio: calcRatio(delayPeisong0, delayPeisong1),
                 currentActualSla: slaW0,
@@ -2166,7 +2443,8 @@
                 page2TopReason: topCell.name,
                 page2DelayCnt: topReasonTotalCnt,
                 page2TopWhName: topCell.wh,
-                page2TopWhCnt: topCell.cnt
+                page2TopWhCnt: topCell.cnt,
+                highAnomaly: { wh: topAnomalyCell.wh || '-', reason: topAnomalyCell.name || '-', desc: anomalyDesc, route: topRoute, store: topStore }
             };
         }
 
@@ -2175,7 +2453,7 @@
             const r = LAST_WEEKLY_REPORT;
 
             const sheet1 = [
-                ["二、重點說明-履約時效-服務EC(C2C+B2C)"],
+                ["履約時效週報摘要"],
                 [`統計區間：${r.headerStr}`],
                 [],
                 ["■ 服務EC履約時效(C2C+B2C)"],
@@ -2187,13 +2465,24 @@
                 ["寄件數", r.volumes.w2, r.volumes.w1, r.volumes.w0, r.volumes.ratio],
                 ["D+2以內 件數", r.d2.cnt.w2, r.d2.cnt.w1, r.d2.cnt.w0, r.d2.cnt.ratio],
                 ["D+2以內 佔比", r.d2.pct.w2, r.d2.pct.w1, r.d2.pct.w0, r.d2.pct.ratio],
+                ["D+3以上件數", r.d3.w2, r.d3.w1, r.d3.w0, r.d3.ratio],
+                [],
+                ["非物流責任"],
+                ...r.nonLogiRows.map(row => [row.name, row.w2, row.w1, row.w0, row.ratio]),
+                ["件數合計", r.nonLogiSum.w2, r.nonLogiSum.w1, r.nonLogiSum.w0, r.nonLogiSum.ratio],
+                ["異常佔比", r.nonLogiPct.w2, r.nonLogiPct.w1, r.nonLogiPct.w0, r.nonLogiPct.ratio],
+                [],
+                ["物流責任"],
+                ...r.logiRows.map(row => [row.name, row.w2, row.w1, row.w0, row.ratio]),
+                ["件數合計", r.logiSum.w2, r.logiSum.w1, r.logiSum.w0, r.logiSum.ratio],
+                ["異常佔比", r.logiPct.w2, r.logiPct.w1, r.logiPct.w0, r.logiPct.ratio],
                 [],
                 [`本週歸屬於物流問題延遲共 ${r.logisticsDelayCnt} 件，前週比為 ${r.logisticsDelayRatio}`],
                 [`異常較高件數為延遲配送共 ${r.topDelayCnt} 件、前週比 ${r.topDelayRatio}`]
             ];
 
             const sheet2 = [
-                ["二、重點說明-履約時效-服務EC(C2C+B2C)"],
+                ["履約時效週報摘要"],
                 [`統計區間：${r.headerStr}`],
                 [],
                 ["■ 各倉物流責任狀況分析"],
@@ -2201,7 +2490,11 @@
                 ...r.whTableRows.map(row => [row.name, row.daxi, row.dadu, row.okayama]),
                 ["件數合計", r.whSums.daxi, r.whSums.dadu, r.whSums.okayama],
                 [],
-                [`${r.page2TopReason}本週共 ${r.page2DelayCnt} 件，其中${r.page2TopWhName} ${r.page2TopWhCnt} 件`]
+                [`${r.page2TopReason}本週共 ${r.page2DelayCnt} 件，其中${r.page2TopWhName} ${r.page2TopWhCnt} 件`],
+                [],
+                ["■ 本週高異常原因"],
+                ["倉別", "延遲原因", "異常狀況說明", "重點異常路線", "重點異常店舖"],
+                [r.highAnomaly.wh, r.highAnomaly.reason, r.highAnomaly.desc, r.highAnomaly.route, r.highAnomaly.store]
             ];
 
             const wb = XLSX.utils.book_new();
@@ -2226,7 +2519,8 @@
             let totalCnt = 0, hasManualInput = false, cur = new Date(start);
             while (cur <= end) {
                 let key = formatDateStr(cur);
-                if (GLOBAL_VOLUMES[key]) { totalCnt += GLOBAL_VOLUMES[key]; hasManualInput = true; }
+                let v = getDailyVolume(key);
+                if (v) { totalCnt += v; hasManualInput = true; }
                 cur.setDate(cur.getDate() + 1);
             }
             if (!hasManualInput || totalCnt === 0) totalCnt = data.length;
@@ -2566,7 +2860,7 @@
         }
 
         function copyCombinedJsonToClipboard() {
-            const payload = { records: GLOBAL_RECORDS, volumes: GLOBAL_VOLUMES, special_stores: SPECIAL_STORES_LIST, users: DYNAMIC_USERS };
+            const payload = { records: GLOBAL_RECORDS, volumes: GLOBAL_VOLUMES, special_stores: SPECIAL_STORES_LIST, users: DYNAMIC_USERS, handover_units: HANDOVER_UNIT_MAP };
             navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
                 alert("📋 複製成功！最新聯合計量庫已寫入剪貼簿。");
             });
@@ -2576,6 +2870,14 @@
             const url = document.getElementById('gistUrlInput').value.trim();
             if (!url) { alert("請貼上 GitHub Raw 網址"); return; }
             await connectToGist(url, false);
+        }
+
+        function disconnectGist() {
+            if (!confirm("確定要取消雲端同步連線嗎？本機瀏覽器裡已經存的資料不會被刪除，之後系統會改用本地快取，不會再自動跟雲端同步。")) return;
+            localStorage.removeItem('logistics_gist_url');
+            document.getElementById('gistUrlInput').value = "";
+            updateSyncStatusUI(false);
+            alert("已取消雲端同步連線，目前改用本地快取。");
         }
 
         async function connectToGist(url, isAuto = false) {
@@ -2588,6 +2890,7 @@
                     GLOBAL_VOLUMES = cloudData.volumes || {};
                     SPECIAL_STORES_LIST = cloudData.special_stores || [];
                     if (cloudData.users) DYNAMIC_USERS = cloudData.users;
+                    HANDOVER_UNIT_MAP = cloudData.handover_units || {};
                     
                     localStorage.setItem('logistics_gist_url', url);
                     persistMemoryToDB();
@@ -2635,7 +2938,8 @@
                 if (section === 'A') processSectionARawData(jsonData);
                 if (section === 'B') processSectionBManualFix(jsonData);
                 if (section === 'C') processSectionCSpecialStores(jsonData);
-                if (section === 'D') processSectionDHorizontalVolumes(worksheet); 
+                if (section === 'D') processSectionDHorizontalVolumes(worksheet);
+                if (section === 'E') processSectionEHandoverUnit(jsonData);
             };
             reader.readAsArrayBuffer(file);
         }
@@ -2658,8 +2962,14 @@
                 filename = "第四區_每日寄件數大表_標準範本.xlsx";
                 headers = ["日期", "2026-07-01", "2026-07-02", "2026-07-03"];
                 dummyData = [
-                    {"日期": "寄件數", "2026-07-01": "45000", "2026-07-02": "48000", "2026-07-03": "51000"}
+                    {"日期": "大溪倉", "2026-07-01": "15000", "2026-07-02": "16000", "2026-07-03": "17000"},
+                    {"日期": "大肚倉", "2026-07-01": "12000", "2026-07-02": "13000", "2026-07-03": "14000"},
+                    {"日期": "岡山倉", "2026-07-01": "18000", "2026-07-02": "19000", "2026-07-03": "20000"}
                 ];
+            } else if (type === 'E') {
+                filename = "第五區_異常點交單位對照表_標準範本.xlsx";
+                headers = ["訂單編號", "點交單位"];
+                dummyData = [{"訂單編號": "EC202600001", "點交單位": "大溪倉"}];
             }
             const ws = XLSX.utils.json_to_sheet(dummyData, { header: headers });
             const wb = XLSX.utils.book_new();
