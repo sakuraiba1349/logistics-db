@@ -498,8 +498,8 @@
                             <input type="date" id="reportWeekEnd" onchange="renderWeeklyReport()" class="border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-[15px]">
                         </div>
                         <div id="weeklyReportExportBtns" style="display: none;" class="flex items-center gap-4">
-                            <button onclick="exportWeeklyReportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
-                                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> 匯出簡報 Excel
+                            <button onclick="exportWeeklyReportToPPT()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
+                                <i data-lucide="presentation" class="w-5 h-5"></i> 匯出簡報 PPT
                             </button>
                             <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-5 rounded-lg text-[15px] shadow flex items-center gap-2 transition">
                                 <i data-lucide="printer" class="w-5 h-5"></i> 列印 / 匯出簡報 PDF
@@ -2448,59 +2448,128 @@
             };
         }
 
-        function exportWeeklyReportToExcel() {
+        function exportWeeklyReportToPPT() {
             if (!LAST_WEEKLY_REPORT) { alert("請先選擇本週區間，產生簡報內容後再匯出。"); return; }
+            if (typeof PptxGenJS === 'undefined') { alert("PPT 產生套件載入失敗，請確認網路連線後重新整理頁面再試一次。"); return; }
             const r = LAST_WEEKLY_REPORT;
 
-            const sheet1 = [
-                ["履約時效週報摘要"],
-                [`統計區間：${r.headerStr}`],
-                [],
-                ["■ 服務EC履約時效(C2C+B2C)"],
-                ["達成狀況", "本期實績"],
-                ["實績", r.currentActualSla],
-                ["是否達成", r.isAchieved],
-                [],
-                ["寄件日日期", r.weekLabels.w2, r.weekLabels.w1, r.weekLabels.w0, "前週比"],
-                ["寄件數", r.volumes.w2, r.volumes.w1, r.volumes.w0, r.volumes.ratio],
-                ["D+2以內 件數", r.d2.cnt.w2, r.d2.cnt.w1, r.d2.cnt.w0, r.d2.cnt.ratio],
-                ["D+2以內 佔比", r.d2.pct.w2, r.d2.pct.w1, r.d2.pct.w0, r.d2.pct.ratio],
-                ["D+3以上件數", r.d3.w2, r.d3.w1, r.d3.w0, r.d3.ratio],
-                [],
-                ["非物流責任"],
-                ...r.nonLogiRows.map(row => [row.name, row.w2, row.w1, row.w0, row.ratio]),
-                ["件數合計", r.nonLogiSum.w2, r.nonLogiSum.w1, r.nonLogiSum.w0, r.nonLogiSum.ratio],
-                ["異常佔比", r.nonLogiPct.w2, r.nonLogiPct.w1, r.nonLogiPct.w0, r.nonLogiPct.ratio],
-                [],
-                ["物流責任"],
-                ...r.logiRows.map(row => [row.name, row.w2, row.w1, row.w0, row.ratio]),
-                ["件數合計", r.logiSum.w2, r.logiSum.w1, r.logiSum.w0, r.logiSum.ratio],
-                ["異常佔比", r.logiPct.w2, r.logiPct.w1, r.logiPct.w0, r.logiPct.ratio],
-                [],
-                [`本週歸屬於物流問題延遲共 ${r.logisticsDelayCnt} 件，前週比為 ${r.logisticsDelayRatio}`],
-                [`異常較高件數為延遲配送共 ${r.topDelayCnt} 件、前週比 ${r.topDelayRatio}`]
+            const pptx = new PptxGenJS();
+            pptx.layout = 'LAYOUT_WIDE'; // 標準寬螢幕 13.33x7.5 吋，字級才不會被迫縮小
+
+            const headerFill = "1E3A8A";
+            const subtotalFill = "F1F5F9";
+            const headerCell = (text) => ({ text, options: { bold: true, fill: { color: headerFill }, color: "FFFFFF" } });
+            const dataRow = (label, row, opts = {}) => [
+                { text: label, options: opts },
+                { text: row.w2.toLocaleString ? row.w2.toLocaleString() : row.w2, options: opts },
+                { text: row.w1.toLocaleString ? row.w1.toLocaleString() : row.w1, options: opts },
+                { text: row.w0.toLocaleString ? row.w0.toLocaleString() : row.w0, options: opts },
+                { text: row.ratio, options: opts }
             ];
 
-            const sheet2 = [
-                ["履約時效週報摘要"],
-                [`統計區間：${r.headerStr}`],
-                [],
-                ["■ 各倉物流責任狀況分析"],
-                ["延遲原因", "大溪倉", "大肚倉", "岡山倉"],
-                ...r.whTableRows.map(row => [row.name, row.daxi, row.dadu, row.okayama]),
-                ["件數合計", r.whSums.daxi, r.whSums.dadu, r.whSums.okayama],
-                [],
-                [`${r.page2TopReason}本週共 ${r.page2DelayCnt} 件，其中${r.page2TopWhName} ${r.page2TopWhCnt} 件`],
-                [],
-                ["■ 本週高異常原因"],
-                ["倉別", "延遲原因", "異常狀況說明", "重點異常路線", "重點異常店舖"],
-                [r.highAnomaly.wh, r.highAnomaly.reason, r.highAnomaly.desc, r.highAnomaly.route, r.highAnomaly.store]
-            ];
+            const addTitle = (slide, subtitle) => {
+                slide.addText("履約時效週報摘要", { x: 0.5, y: 0.3, w: 12.3, h: 0.6, fontSize: 26, bold: true });
+                slide.addText(subtitle, { x: 0.5, y: 0.95, w: 12.3, h: 0.4, fontSize: 15, color: "666666" });
+            };
 
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet1), "簡報第一頁");
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet2), "簡報第二頁");
-            XLSX.writeFile(wb, `每週履約時效簡報_${formatDateStr(new Date())}.xlsx`);
+            // 第一頁：寄件數、D+2以內、D+3以上總覽
+            const slide1 = pptx.addSlide();
+            addTitle(slide1, `統計區間：${r.headerStr}｜實績 ${r.currentActualSla}（${r.isAchieved === '○' ? '達成' : '未達成'}）`);
+
+            const overviewRows = [
+                [headerCell("寄件日日期"), headerCell(r.weekLabels.w2), headerCell(r.weekLabels.w1), headerCell(r.weekLabels.w0), headerCell("前週比")],
+                dataRow("寄件數", r.volumes),
+                dataRow("D+2以內 件數", r.d2.cnt),
+                dataRow("D+2以內 佔比", r.d2.pct),
+                dataRow("D+3以上件數", r.d3, { bold: true, fill: { color: subtotalFill } })
+            ];
+            slide1.addTable(overviewRows, {
+                x: 0.5, y: 1.6, w: 12.3, h: 3.2,
+                fontSize: 18, border: { type: "solid", color: "CBD5E1", pt: 1 },
+                align: "center", valign: "middle", autoPage: false
+            });
+            slide1.addText(
+                `・本週歸屬於物流問題延遲共 ${r.logisticsDelayCnt} 件，前週比為 ${r.logisticsDelayRatio}\n・異常較高件數為延遲配送共 ${r.topDelayCnt} 件、前週比 ${r.topDelayRatio}`,
+                { x: 0.5, y: 5.1, w: 12.3, h: 0.8, fontSize: 14, color: "444444" }
+            );
+
+            // 第二頁：非物流責任明細
+            const slide2 = pptx.addSlide();
+            addTitle(slide2, `統計區間：${r.headerStr}｜■ 非物流責任`);
+            const nonLogiTableRows = [
+                [headerCell("項目"), headerCell(r.weekLabels.w2), headerCell(r.weekLabels.w1), headerCell(r.weekLabels.w0), headerCell("前週比")],
+                ...r.nonLogiRows.map(row => dataRow(row.name, row)),
+                dataRow("件數合計", r.nonLogiSum, { bold: true, fill: { color: subtotalFill } }),
+                dataRow("異常佔比", r.nonLogiPct, { bold: true, fill: { color: subtotalFill } })
+            ];
+            slide2.addTable(nonLogiTableRows, {
+                x: 0.5, y: 1.6, w: 12.3, h: 4.5,
+                fontSize: 18, border: { type: "solid", color: "CBD5E1", pt: 1 },
+                align: "center", valign: "middle", autoPage: false
+            });
+
+            // 第三頁：物流責任明細
+            const slide3 = pptx.addSlide();
+            addTitle(slide3, `統計區間：${r.headerStr}｜■ 物流責任`);
+            const logiTableRows = [
+                [headerCell("項目"), headerCell(r.weekLabels.w2), headerCell(r.weekLabels.w1), headerCell(r.weekLabels.w0), headerCell("前週比")],
+                ...r.logiRows.map(row => dataRow(row.name, row)),
+                dataRow("件數合計", r.logiSum, { bold: true, fill: { color: subtotalFill } }),
+                dataRow("異常佔比", r.logiPct, { bold: true, fill: { color: subtotalFill } })
+            ];
+            slide3.addTable(logiTableRows, {
+                x: 0.5, y: 1.6, w: 12.3, h: 5,
+                fontSize: 18, border: { type: "solid", color: "CBD5E1", pt: 1 },
+                align: "center", valign: "middle", autoPage: false
+            });
+
+            // 第四頁：各倉物流責任狀況分析、本週高異常原因
+            const slide4 = pptx.addSlide();
+            addTitle(slide4, `統計區間：${r.headerStr}｜■ 各倉物流責任狀況分析`);
+            const whTableRows = [
+                [headerCell("延遲原因"), headerCell("大溪倉"), headerCell("大肚倉"), headerCell("岡山倉")],
+                ...r.whTableRows.map(row => [
+                    { text: row.name },
+                    { text: String(row.daxi) },
+                    { text: String(row.dadu) },
+                    { text: String(row.okayama) }
+                ]),
+                [
+                    { text: "件數合計", options: { bold: true, fill: { color: subtotalFill } } },
+                    { text: String(r.whSums.daxi), options: { bold: true, fill: { color: subtotalFill } } },
+                    { text: String(r.whSums.dadu), options: { bold: true, fill: { color: subtotalFill } } },
+                    { text: String(r.whSums.okayama), options: { bold: true, fill: { color: subtotalFill } } }
+                ]
+            ];
+            slide4.addTable(whTableRows, {
+                x: 0.5, y: 1.6, w: 12.3, h: 2.8,
+                fontSize: 16, border: { type: "solid", color: "CBD5E1", pt: 1 },
+                align: "center", valign: "middle", autoPage: false
+            });
+
+            slide4.addText(
+                `${r.page2TopReason}本週共 ${r.page2DelayCnt} 件，其中${r.page2TopWhName} ${r.page2TopWhCnt} 件`,
+                { x: 0.5, y: 4.6, w: 12.3, h: 0.4, fontSize: 15, color: "444444" }
+            );
+
+            slide4.addText("■ 本週高異常原因", { x: 0.5, y: 5.15, w: 12.3, h: 0.4, fontSize: 16, bold: true });
+            const anomalyTableRows = [
+                [headerCell("倉別"), headerCell("延遲原因"), headerCell("異常狀況說明"), headerCell("重點異常路線"), headerCell("重點異常店舖")],
+                [
+                    { text: r.highAnomaly.wh },
+                    { text: r.highAnomaly.reason, options: { color: "DC2626", bold: true } },
+                    { text: r.highAnomaly.desc },
+                    { text: r.highAnomaly.route },
+                    { text: r.highAnomaly.store }
+                ]
+            ];
+            slide4.addTable(anomalyTableRows, {
+                x: 0.5, y: 5.65, w: 12.3, h: 1,
+                fontSize: 15, border: { type: "solid", color: "CBD5E1", pt: 1 },
+                align: "center", valign: "middle", autoPage: false
+            });
+
+            pptx.writeFile({ fileName: `每週履約時效簡報_${formatDateStr(new Date())}.pptx` });
         }
 
         function renderMonthlyDelayReport() {
@@ -2610,10 +2679,11 @@
             const r = LAST_MONTHLY_REPORT;
 
             const pptx = new PptxGenJS();
+            pptx.layout = 'LAYOUT_WIDE'; // 標準寬螢幕 13.33x7.5 吋，字級才不會被迫縮小
             const slide = pptx.addSlide();
 
-            slide.addText("履約時效月報表（D+2/D+3 分析）", { x: 0.4, y: 0.3, w: 9, h: 0.5, fontSize: 20, bold: true });
-            slide.addText(`統計區間：寄件月 ${r.rangeLbl}`, { x: 0.4, y: 0.8, w: 9, h: 0.4, fontSize: 13, color: "666666" });
+            slide.addText("履約時效月報表（D+2/D+3 分析）", { x: 0.5, y: 0.3, w: 12.3, h: 0.6, fontSize: 26, bold: true });
+            slide.addText(`統計區間：寄件月 ${r.rangeLbl}`, { x: 0.5, y: 0.95, w: 12.3, h: 0.4, fontSize: 15, color: "666666" });
 
             const headerFill = "1E3A8A";
             const tableRows = [
@@ -2668,8 +2738,8 @@
             ];
 
             slide.addTable(tableRows, {
-                x: 0.4, y: 1.3, w: 9, h: 4.5,
-                fontSize: 12,
+                x: 0.5, y: 1.6, w: 12.3, h: 5.4,
+                fontSize: 18,
                 border: { type: "solid", color: "CBD5E1", pt: 1 },
                 align: "center",
                 valign: "middle",
@@ -2952,7 +3022,7 @@
                 dummyData = [{"訂單編號": "EC202600001", "寄件日": "20260706", "寄件時間": "232027", "離店日": "20260706", "離店時間": "232027", "離店帳號": "MING_CHANG-API", "驗收日": "20260707", "驗收時間": "015545", "驗收倉": "01 大溪倉", "出貨倉": "06 大肚倉", "寄件店號": "024878", "寄件店名": "大園環西門市", "寄件店行政區": "桃園市大園區"}];
             } else if (type === 'B') {
                 filename = "第二區_人工原因修正名冊_標準範本.xlsx";
-                headers = ["日期", "星期", "類別", "訂單編號", "寄件日", "寄件時間", "離店日", "離店時間", "離店帳號", "離店倉別", "驗收日", "驗收時間", "驗收倉", "理貨設備讀取日期", "理貨設備讀取時間", "理貨PDA裝箱日期", "理貨PDA裝箱時間", "理貨疊板日期", "理貨疊板時間", "出貨倉", "出貨配別", "運務士疊板日期", "運務士疊板時間", "運務士卸貨日期", "運務士卸貨時間", "到店日", "到店驗收時間", "最終貨態", "寄件通路", "寄件店號", "寄件店名", "取件通路", "取件店號", "取件店名", "商品價值", "備註", "上收件", "異常點交日期", "異常點交原因", "店舖壓缺時間", "寄件店回收路線", "取件店配送路線", "寄件店行政區", "配送店行政區", "延遲原因", "責任歸屬倉別", "責任歸屬單位"];
+                headers = ["訂單編號", "延遲原因", "責任歸屬倉別", "責任歸屬單位"];
                 dummyData = [{"訂單編號": "EC202600001", "延遲原因": "天候因素船班停航", "責任歸屬倉別": "其他", "責任歸屬單位": "運務"}];
             } else if (type === 'C') {
                 filename = "離島及特殊店Lookup名冊_標準範本.xlsx";
